@@ -1,4 +1,4 @@
-# 🚀 LeetVerse Official Website
+# LeetVerse Official Website
 
 The official repository for the **LeetVerse Website** — a platform for coding, DSA, member portfolios, team domains, project showcases, and event galleries.
 
