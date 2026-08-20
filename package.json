@@ -1,0 +1,22 @@
+{
+  "name": "leetverse-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "LeetVerse Official Society Website Monorepo",
+  "scripts": {
+    "install:all": "npm --prefix backend install",
+    "dev:backend": "npm --prefix backend run dev",
+    "build:backend": "npm --prefix backend run build",
+    "start:backend": "npm --prefix backend start",
+    "cache:generate": "npm --prefix backend run cache:generate"
+  },
+  "keywords": [
+    "leetverse",
+    "dsa",
+    "react",
+    "express",
+    "firestore"
+  ],
+  "author": "LeetVerse",
+  "license": "MIT"
+}
