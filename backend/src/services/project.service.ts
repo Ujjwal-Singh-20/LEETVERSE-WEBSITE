@@ -1,52 +1,83 @@
+import { db } from '../config/firebase';
+import { COLLECTIONS } from '../constants/collections';
+import { ERROR_CODES } from '../constants/errorCodes';
+import { AppError } from '../middlewares/error.middleware';
 import { CreateProjectInput, UpdateProjectInput } from '../schemas/project.schema';
-import { ProjectResponse } from '../types';
+import { serializeProject } from '../serializers/project.serializer';
+import { ProjectDoc, ProjectResponse } from '../types';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export class ProjectService {
-  /**
-   * Get all projects (public fallback / admin listing)
-   */
   async getProjects(): Promise<ProjectResponse[]> {
-    // TODO: Query projects collection ordered by createdAt desc
-    // TODO: Serialize with ISO 8601 timestamps and return ProjectResponse[]
-    throw new Error('[TODO] getProjects not implemented');
+    const snap = await db
+      .collection(COLLECTIONS.PROJECTS)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    return snap.docs.map((doc) => serializeProject(doc.data() as ProjectDoc));
   }
 
-  /**
-   * Get single project by slug
-   */
   async getProjectBySlug(slug: string): Promise<ProjectResponse> {
-    // TODO: Read projects/{slug} from Firestore
-    // TODO: Throw 404 AppError(PROJECT_NOT_FOUND) if not found
-    // TODO: Serialize and return ProjectResponse
-    throw new Error(`[TODO] getProjectBySlug not implemented for slug: ${slug}`);
+    const doc = await db.collection(COLLECTIONS.PROJECTS).doc(slug).get();
+
+    if (!doc.exists) {
+      throw new AppError(404, ERROR_CODES.PROJECT_NOT_FOUND, `Project '${slug}' not found.`);
+    }
+
+    return serializeProject(doc.data() as ProjectDoc);
   }
 
-  /**
-   * Create new project in projects/{slug}
-   */
   async createProject(data: CreateProjectInput): Promise<ProjectResponse> {
-    // TODO: Check if projects/{data.slug} already exists
-    // TODO: Write project doc with images[] and members[] snapshot
-    // TODO: Return serializeProject
-    throw new Error(`[TODO] createProject not implemented for slug: ${data.slug}`);
+    const existing = await db.collection(COLLECTIONS.PROJECTS).doc(data.slug).get();
+    if (existing.exists) {
+      throw new AppError(400, ERROR_CODES.VALIDATION_ERROR, `Project slug '${data.slug}' is already taken.`);
+    }
+
+    const now = FieldValue.serverTimestamp();
+    const projectData: Record<string, any> = {
+      slug: data.slug,
+      title: data.title,
+      description: data.description,
+      images: data.images || [],
+      members: data.members || [],
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await db.collection(COLLECTIONS.PROJECTS).doc(data.slug).set(projectData);
+
+    return serializeProject({
+      ...projectData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as ProjectDoc);
   }
 
-  /**
-   * Update existing project
-   */
   async updateProject(slug: string, data: UpdateProjectInput): Promise<ProjectResponse> {
-    // TODO: Update fields in projects/{slug} and bump updatedAt timestamp
-    // TODO: Return updated project
-    throw new Error(`[TODO] updateProject not implemented for slug: ${slug}`);
+    const docRef = db.collection(COLLECTIONS.PROJECTS).doc(slug);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      throw new AppError(404, ERROR_CODES.PROJECT_NOT_FOUND, `Project '${slug}' not found.`);
+    }
+
+    const updates: Record<string, any> = { ...data, updatedAt: FieldValue.serverTimestamp() };
+    await docRef.update(updates);
+
+    const updatedSnap = await docRef.get();
+    return serializeProject(updatedSnap.data() as ProjectDoc);
   }
 
-  /**
-   * Hard delete project
-   */
   async deleteProject(slug: string): Promise<{ success: boolean; slug: string }> {
-    // TODO: Hard delete projects/{slug} doc from Firestore
-    // TODO: Note per docs: Cloudinary images left orphaned (no cleanup needed)
-    throw new Error(`[TODO] deleteProject not implemented for slug: ${slug}`);
+    const docRef = db.collection(COLLECTIONS.PROJECTS).doc(slug);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      throw new AppError(404, ERROR_CODES.PROJECT_NOT_FOUND, `Project '${slug}' not found.`);
+    }
+
+    await docRef.delete();
+    return { success: true, slug };
   }
 }
 
