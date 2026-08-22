@@ -1,41 +1,156 @@
-import { GalleryListingBlob, MembersListingBlob, ProjectsListingBlob } from '../types';
+import { db } from '../config/firebase';
+import { COLLECTIONS } from '../constants/collections';
+import { ENV } from '../config/env';
+import {
+  GalleryListingBlob,
+  MembersListingBlob,
+  ProjectsListingBlob,
+  GalleryEventDoc,
+  ProjectDoc,
+  MemberDoc,
+} from '../types';
+import * as fs from 'fs';
+import * as path from 'path';
 
-/**
- * LeetVerse Cache Refresh Job (Owner-run via manual trigger / GitHub Action)
- * Builds 3 static listing JSON blobs and uploads to Vercel Blob:
- * 1. members-listing.json (Active members grouped by domain)
- * 2. projects-listing.json (Projects with precomputed thumbnail)
- * 3. gallery-listing.json (Events listing - images[] omitted)
- */
+function formatTimestamp(timestamp: any): string {
+  if (!timestamp) return new Date().toISOString();
+  if (typeof timestamp.toDate === 'function') return timestamp.toDate().toISOString();
+  if (typeof timestamp === 'string') return timestamp;
+  if (timestamp instanceof Date) return timestamp.toISOString();
+  return new Date().toISOString();
+}
 
 async function generateMembersListing(): Promise<MembersListingBlob> {
-  // TODO: Step 1 - Query all domain docs in members collection
-  // TODO: Step 2 - For each domain, query members_listed where status == 'active'
-  // TODO: Step 3 - Map members to { username, name, position, photoUrl, status: 'active' }
-  // TODO: Step 4 - Return { generatedAt: ISOString, domains: [...] }
-  throw new Error('[TODO] generateMembersListing not implemented');
+  const domainsSnap = await db.collection(COLLECTIONS.MEMBERS).listDocuments();
+
+  const domains = await Promise.all(
+    domainsSnap.map(async (domainDoc) => {
+      const membersSnap = await domainDoc
+        .collection(COLLECTIONS.MEMBERS_LISTED)
+        .where('status', '==', 'active')
+        .get();
+
+      const members = membersSnap.docs.map((doc) => {
+        const data = doc.data() as MemberDoc;
+        return {
+          username: data.username,
+          name: data.name,
+          position: data.position,
+          photoUrl: data.photoUrl || null,
+          status: 'active' as const,
+        };
+      });
+
+      return {
+        slug: domainDoc.id,
+        name: domainDoc.id
+          .split('-')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' '),
+        members,
+      };
+    })
+  );
+
+  return {
+    generatedAt: new Date().toISOString(),
+    domains: domains.filter((d) => d.members.length > 0),
+  };
 }
 
 async function generateProjectsListing(): Promise<ProjectsListingBlob> {
-  // TODO: Step 1 - Query projects collection ordered by createdAt desc
-  // TODO: Step 2 - Map to { slug, title, description, thumbnail: images[0] || '', members }
-  // TODO: Step 3 - Return { generatedAt: ISOString, projects: [...] }
-  throw new Error('[TODO] generateProjectsListing not implemented');
+  const snap = await db
+    .collection(COLLECTIONS.PROJECTS)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  const projects = snap.docs.map((doc) => {
+    const data = doc.data() as ProjectDoc;
+    return {
+      slug: data.slug,
+      title: data.title,
+      description: data.description,
+      thumbnail: data.images[0] || '',
+      members: data.members || [],
+    };
+  });
+
+  return { generatedAt: new Date().toISOString(), projects };
 }
 
 async function generateGalleryListing(): Promise<GalleryListingBlob> {
-  // TODO: Step 1 - Query gallery_events ordered by date desc
-  // TODO: Step 2 - Map to { slug, eventName, shortDesc, thumbnail, date } (OMIT images[])
-  // TODO: Step 3 - Return { generatedAt: ISOString, events: [...] }
-  throw new Error('[TODO] generateGalleryListing not implemented');
+  const snap = await db
+    .collection(COLLECTIONS.GALLERY_EVENTS)
+    .orderBy('date', 'desc')
+    .get();
+
+  const events = snap.docs.map((doc) => {
+    const data = doc.data() as GalleryEventDoc;
+    return {
+      slug: data.slug,
+      eventName: data.eventName,
+      shortDesc: data.shortDesc,
+      thumbnail: data.thumbnail,
+      date: formatTimestamp(data.date),
+    };
+  });
+
+  return { generatedAt: new Date().toISOString(), events };
+}
+
+async function uploadToBlob(
+  filename: string,
+  data: Record<string, unknown>
+): Promise<void> {
+  const { put } = await import('@vercel/blob');
+  const json = JSON.stringify(data, null, 2);
+  await put(filename, json, {
+    access: 'public',
+    token: ENV.BLOB_READ_WRITE_TOKEN,
+  });
+  console.log(`  ✅ Uploaded ${filename} to Vercel Blob`);
+}
+
+function saveToLocal(filename: string, data: Record<string, unknown>): void {
+  const cacheDir = path.join(process.cwd(), 'dist', 'cache');
+  if (!fs.existsSync(cacheDir)) {
+    fs.mkdirSync(cacheDir, { recursive: true });
+  }
+  const filePath = path.join(cacheDir, filename);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+  console.log(`  💾 Saved ${filePath} locally (no BLOB_READ_WRITE_TOKEN)`);
 }
 
 async function run(): Promise<void> {
   console.log('🚀 Starting LeetVerse Cache Refresh Job...');
+  const useBlob = !!ENV.BLOB_READ_WRITE_TOKEN;
+
   try {
-    // TODO: Generate blobs and upload to Vercel Blob using @vercel/blob put()
-    // TODO: Fallback to local dist/cache/ file writes if BLOB_READ_WRITE_TOKEN is not set
-    console.log('⚡ Boilerplate Cache Script. Implement generators above.');
+    console.log('\n📋 Generating members listing...');
+    const membersBlob = await generateMembersListing();
+    if (useBlob) {
+      await uploadToBlob('members-listing.json', membersBlob as any);
+    } else {
+      saveToLocal('members-listing.json', membersBlob as any);
+    }
+
+    console.log('📋 Generating projects listing...');
+    const projectsBlob = await generateProjectsListing();
+    if (useBlob) {
+      await uploadToBlob('projects-listing.json', projectsBlob as any);
+    } else {
+      saveToLocal('projects-listing.json', projectsBlob as any);
+    }
+
+    console.log('📋 Generating gallery listing...');
+    const galleryBlob = await generateGalleryListing();
+    if (useBlob) {
+      await uploadToBlob('gallery-listing.json', galleryBlob as any);
+    } else {
+      saveToLocal('gallery-listing.json', galleryBlob as any);
+    }
+
+    console.log('\n✨ Cache refresh complete!');
   } catch (error) {
     console.error('❌ Cache refresh failed:', error);
     process.exit(1);

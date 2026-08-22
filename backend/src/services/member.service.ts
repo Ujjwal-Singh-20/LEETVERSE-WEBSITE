@@ -1,81 +1,220 @@
+import { db } from '../config/firebase';
+import { COLLECTIONS } from '../constants/collections';
+import { ERROR_CODES } from '../constants/errorCodes';
+import { AppError } from '../middlewares/error.middleware';
 import { CreateMemberInput } from '../schemas/member.schema';
-import { AdminMember, DomainTreeNode, PublicMember } from '../types';
+import { serializePublicMember, serializeAdminMember } from '../serializers/member.serializer';
+import { AdminMember, DomainTreeNode, MemberDoc, PublicMember, UsernameLookupDoc } from '../types';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export class MemberService {
-  /**
-   * Fetches public member profile live via /u/:username
-   * Flow per docs:
-   * 1. Read usernames/{username} -> gets domain + docId
-   * 2. Read members/{domain}/members_listed/{docId} -> returns public fields (rollNo excluded)
-   */
   async getPublicMemberByUsername(username: string): Promise<PublicMember> {
-    // TODO: Step 1 - Look up usernames/{username.toLowerCase()} in Firestore
-    // TODO: Step 2 - Throw 404 AppError(USERNAME_NOT_FOUND) if lookup document does not exist
-    // TODO: Step 3 - Read members/{domain}/members_listed/{docId}
-    // TODO: Step 4 - Throw 404 AppError(MEMBER_NOT_FOUND) if member document does not exist
-    // TODO: Step 5 - Return serializePublicMember(memberData) to guarantee rollNo is never leaked
-    throw new Error(`[TODO] getPublicMemberByUsername not implemented for username: ${username}`);
+    const lookupSnap = await db
+      .collection(COLLECTIONS.USERNAMES)
+      .doc(username.toLowerCase())
+      .get();
+
+    if (!lookupSnap.exists) {
+      throw new AppError(404, ERROR_CODES.USERNAME_NOT_FOUND, `No member found with username '${username}'.`);
+    }
+
+    const lookup = lookupSnap.data() as UsernameLookupDoc;
+
+    const memberSnap = await db
+      .collection(COLLECTIONS.MEMBERS)
+      .doc(lookup.domain)
+      .collection(COLLECTIONS.MEMBERS_LISTED)
+      .doc(lookup.docId)
+      .get();
+
+    if (!memberSnap.exists) {
+      throw new AppError(404, ERROR_CODES.MEMBER_NOT_FOUND, 'Member profile not found.');
+    }
+
+    return serializePublicMember(memberSnap.data() as MemberDoc);
   }
 
-  /**
-   * Live uniqueness check for username while typing in admin panel
-   */
   async checkUsernameAvailable(username: string): Promise<{ available: boolean; username: string }> {
-    // TODO: Step 1 - Query usernames/{username.toLowerCase()}
-    // TODO: Step 2 - Return { available: !lookupSnap.exists, username }
-    throw new Error(`[TODO] checkUsernameAvailable not implemented for username: ${username}`);
+    const lookupSnap = await db
+      .collection(COLLECTIONS.USERNAMES)
+      .doc(username.toLowerCase())
+      .get();
+
+    return { available: !lookupSnap.exists, username };
   }
 
-  /**
-   * Returns domain hierarchy and nested members for Admin Panel tree/indented view
-   * Structure: members/{domain}/members_listed/{docId}
-   */
   async getMemberTree(): Promise<DomainTreeNode[]> {
-    // TODO: Step 1 - Read all domain documents in members collection
-    // TODO: Step 2 - For each domain, read the subcollection members_listed
-    // TODO: Step 3 - Serialize and format into DomainTreeNode[]
-    throw new Error('[TODO] getMemberTree not implemented');
+    const domainsSnap = await db.collection(COLLECTIONS.MEMBERS).listDocuments();
+
+    const tree: DomainTreeNode[] = await Promise.all(
+      domainsSnap.map(async (domainDoc) => {
+        const membersSnap = await domainDoc
+          .collection(COLLECTIONS.MEMBERS_LISTED)
+          .get();
+
+        const members = membersSnap.docs.map((doc) =>
+          serializeAdminMember(doc.id, domainDoc.id, doc.data() as MemberDoc)
+        );
+
+        return {
+          slug: domainDoc.id,
+          name: domainDoc.id
+            .split('-')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' '),
+          members,
+        };
+      })
+    );
+
+    return tree;
   }
 
-  /**
-   * Creates a new member under a domain with atomic username lookup
-   * Flow per docs:
-   * - Must run in a Firestore transaction:
-   *   1. Check usernames/{username} (fail if taken)
-   *   2. Ensure parent domain doc exists in members/{domain}
-   *   3. Write members/{domain}/members_listed/{autoId}
-   *   4. Write usernames/{username} -> { domain, docId }
-   */
   async createMember(domain: string, data: CreateMemberInput): Promise<AdminMember> {
-    // TODO: Step 1 - Run db.runTransaction
-    // TODO: Step 2 - Check username uniqueness in transaction
-    // TODO: Step 3 - Write member doc with serverTimestamp for createdAt and updatedAt
-    // TODO: Step 4 - Write usernames/{username} pointer doc
-    // TODO: Step 5 - Return serializeAdminMember
-    throw new Error(`[TODO] createMember not implemented for domain: ${domain}`);
+    const normalizedUsername = data.username.toLowerCase();
+
+    const result = await db.runTransaction(async (transaction) => {
+      const usernameRef = db.collection(COLLECTIONS.USERNAMES).doc(normalizedUsername);
+      const usernameSnap = await transaction.get(usernameRef);
+
+      if (usernameSnap.exists) {
+        throw new AppError(400, ERROR_CODES.USERNAME_TAKEN, `Username '${normalizedUsername}' is already taken.`);
+      }
+
+      const domainRef = db.collection(COLLECTIONS.MEMBERS).doc(domain);
+      const domainSnap = await transaction.get(domainRef);
+      if (!domainSnap.exists) {
+        transaction.set(domainRef, { createdAt: FieldValue.serverTimestamp() });
+      }
+
+      const memberRef = domainRef.collection(COLLECTIONS.MEMBERS_LISTED).doc();
+      const now = FieldValue.serverTimestamp();
+      const memberData: Record<string, any> = {
+        name: data.name,
+        username: normalizedUsername,
+        status: data.status,
+        position: data.position,
+        bio: data.bio || '',
+        rollNo: data.rollNo,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      if (data.photoUrl) memberData.photoUrl = data.photoUrl;
+      if (data.instagram) memberData.instagram = data.instagram;
+      if (data.linkedin) memberData.linkedin = data.linkedin;
+      if (data.github) memberData.github = data.github;
+
+      transaction.set(memberRef, memberData);
+
+      transaction.set(usernameRef, {
+        domain,
+        docId: memberRef.id,
+      });
+
+      return { docId: memberRef.id, domain, memberData, normalizedUsername };
+    });
+
+    return serializeAdminMember(result.docId, result.domain, {
+      ...result.memberData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as MemberDoc);
   }
 
-  /**
-   * Single-field autosave on blur (targeted write)
-   * Updates only the modified field + bumps updatedAt timestamp
-   */
-  async updateMemberField(domain: string, docId: string, field: string, value: any): Promise<{ success: boolean; field: string; value: any }> {
-    // TODO: Step 1 - Verify members/{domain}/members_listed/{docId} exists
-    // TODO: Step 2 - Perform targeted update: update({ [field]: value, updatedAt: serverTimestamp() })
-    // TODO: Step 3 - Return confirmation { success: true, field, value }
-    throw new Error(`[TODO] updateMemberField not implemented for docId: ${docId}, field: ${field}`);
+  async updateMemberField(
+    domain: string,
+    docId: string,
+    field: string,
+    value: any
+  ): Promise<{ success: boolean; field: string; value: any }> {
+    const memberRef = db
+      .collection(COLLECTIONS.MEMBERS)
+      .doc(domain)
+      .collection(COLLECTIONS.MEMBERS_LISTED)
+      .doc(docId);
+
+    const memberSnap = await memberRef.get();
+    if (!memberSnap.exists) {
+      throw new AppError(404, ERROR_CODES.MEMBER_NOT_FOUND, 'Member not found.');
+    }
+
+    await memberRef.update({
+      [field]: value,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    return { success: true, field, value };
   }
 
-  /**
-   * Hard delete of member + username lookup
-   * Must delete both members/{domain}/members_listed/{docId} and usernames/{username} in a transaction
-   */
   async deleteMember(domain: string, docId: string): Promise<{ success: boolean; username: string }> {
-    // TODO: Step 1 - Run db.runTransaction
-    // TODO: Step 2 - Read member doc to get username
-    // TODO: Step 3 - Delete member doc and usernames/{username} doc
-    // TODO: Step 4 - Return { success: true, username }
-    throw new Error(`[TODO] deleteMember not implemented for docId: ${docId}`);
+    const result = await db.runTransaction(async (transaction) => {
+      const memberRef = db
+        .collection(COLLECTIONS.MEMBERS)
+        .doc(domain)
+        .collection(COLLECTIONS.MEMBERS_LISTED)
+        .doc(docId);
+
+      const memberSnap = await transaction.get(memberRef);
+      if (!memberSnap.exists) {
+        throw new AppError(404, ERROR_CODES.MEMBER_NOT_FOUND, 'Member not found.');
+      }
+
+      const memberData = memberSnap.data() as MemberDoc;
+      const usernameRef = db.collection(COLLECTIONS.USERNAMES).doc(memberData.username);
+
+      transaction.delete(memberRef);
+      transaction.delete(usernameRef);
+
+      return { username: memberData.username };
+    });
+
+    return { success: true, username: result.username };
+  }
+
+  async getActiveMembersByDomain(): Promise<Array<{
+    slug: string;
+    name: string;
+    members: Array<{
+      username: string;
+      name: string;
+      position: string;
+      photoUrl: string | null;
+      status: 'active';
+    }>;
+  }>> {
+    const domainsSnap = await db.collection(COLLECTIONS.MEMBERS).listDocuments();
+
+    const domains = await Promise.all(
+      domainsSnap.map(async (domainDoc) => {
+        const membersSnap = await domainDoc
+          .collection(COLLECTIONS.MEMBERS_LISTED)
+          .where('status', '==', 'active')
+          .get();
+
+        const members = membersSnap.docs.map((doc) => {
+          const data = doc.data() as MemberDoc;
+          return {
+            username: data.username,
+            name: data.name,
+            position: data.position,
+            photoUrl: data.photoUrl || null,
+            status: 'active' as const,
+          };
+        });
+
+        return {
+          slug: domainDoc.id,
+          name: domainDoc.id
+            .split('-')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' '),
+          members,
+        };
+      })
+    );
+
+    return domains.filter((d) => d.members.length > 0);
   }
 }
 

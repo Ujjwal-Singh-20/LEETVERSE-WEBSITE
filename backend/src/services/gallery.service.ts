@@ -1,58 +1,95 @@
+import { db } from '../config/firebase';
+import { COLLECTIONS } from '../constants/collections';
+import { ERROR_CODES } from '../constants/errorCodes';
+import { AppError } from '../middlewares/error.middleware';
 import { CreateGalleryEventInput, UpdateGalleryEventInput } from '../schemas/gallery.schema';
-import { GalleryEventResponse } from '../types';
+import { serializeGalleryListingItem, serializeGalleryDetail } from '../serializers/gallery.serializer';
+import { GalleryEventDoc, GalleryEventResponse } from '../types';
+import { FieldValue } from 'firebase-admin/firestore';
 
 export class GalleryService {
-  /**
-   * Public gallery listing (images[] array omitted per docs split)
-   */
   async getGalleryListings(): Promise<Array<{ slug: string; eventName: string; shortDesc: string; thumbnail: string; date: string }>> {
-    // TODO: Query gallery_events ordered by date desc
-    // TODO: Return listing array with thumbnail, eventName, shortDesc, date (OMIT images[])
-    throw new Error('[TODO] getGalleryListings not implemented');
+    const snap = await db
+      .collection(COLLECTIONS.GALLERY_EVENTS)
+      .orderBy('date', 'desc')
+      .get();
+
+    return snap.docs.map((doc) => serializeGalleryListingItem(doc.data() as GalleryEventDoc));
   }
 
-  /**
-   * Live fetch of images[] array for event popup: GET /api/gallery/:slug/images
-   */
   async getGalleryImages(slug: string): Promise<{ slug: string; eventName: string; images: string[] }> {
-    // TODO: Read gallery_events/{slug} from Firestore
-    // TODO: Throw 404 AppError(GALLERY_NOT_FOUND) if not found
-    // TODO: Return { slug, eventName, images: data.images || [] }
-    throw new Error(`[TODO] getGalleryImages not implemented for slug: ${slug}`);
+    const doc = await db.collection(COLLECTIONS.GALLERY_EVENTS).doc(slug).get();
+
+    if (!doc.exists) {
+      throw new AppError(404, ERROR_CODES.GALLERY_NOT_FOUND, `Gallery event '${slug}' not found.`);
+    }
+
+    const data = doc.data() as GalleryEventDoc;
+    return { slug: data.slug, eventName: data.eventName, images: data.images || [] };
   }
 
-  /**
-   * Full event detail for admin panel
-   */
   async getGalleryEventBySlug(slug: string): Promise<GalleryEventResponse> {
-    // TODO: Read gallery_events/{slug} with full images[] and timestamps
-    throw new Error(`[TODO] getGalleryEventBySlug not implemented for slug: ${slug}`);
+    const doc = await db.collection(COLLECTIONS.GALLERY_EVENTS).doc(slug).get();
+
+    if (!doc.exists) {
+      throw new AppError(404, ERROR_CODES.GALLERY_NOT_FOUND, `Gallery event '${slug}' not found.`);
+    }
+
+    return serializeGalleryDetail(doc.data() as GalleryEventDoc);
   }
 
-  /**
-   * Create new gallery event in gallery_events/{slug}
-   */
   async createGalleryEvent(data: CreateGalleryEventInput): Promise<GalleryEventResponse> {
-    // TODO: Check slug uniqueness in gallery_events/{slug}
-    // TODO: Write event doc with thumbnail, shortDesc, eventName, date, images[]
-    // TODO: Return serializeGalleryDetail
-    throw new Error(`[TODO] createGalleryEvent not implemented for slug: ${data.slug}`);
+    const existing = await db.collection(COLLECTIONS.GALLERY_EVENTS).doc(data.slug).get();
+    if (existing.exists) {
+      throw new AppError(400, ERROR_CODES.VALIDATION_ERROR, `Gallery event slug '${data.slug}' is already taken.`);
+    }
+
+    const now = FieldValue.serverTimestamp();
+    const eventData: Record<string, any> = {
+      slug: data.slug,
+      eventName: data.eventName,
+      shortDesc: data.shortDesc,
+      thumbnail: data.thumbnail,
+      images: data.images || [],
+      date: data.date,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    await db.collection(COLLECTIONS.GALLERY_EVENTS).doc(data.slug).set(eventData);
+
+    return serializeGalleryDetail({
+      ...eventData,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    } as GalleryEventDoc);
   }
 
-  /**
-   * Update gallery event
-   */
   async updateGalleryEvent(slug: string, data: UpdateGalleryEventInput): Promise<GalleryEventResponse> {
-    // TODO: Update fields in gallery_events/{slug} and bump updatedAt
-    throw new Error(`[TODO] updateGalleryEvent not implemented for slug: ${slug}`);
+    const docRef = db.collection(COLLECTIONS.GALLERY_EVENTS).doc(slug);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      throw new AppError(404, ERROR_CODES.GALLERY_NOT_FOUND, `Gallery event '${slug}' not found.`);
+    }
+
+    const updates: Record<string, any> = { ...data, updatedAt: FieldValue.serverTimestamp() };
+    await docRef.update(updates);
+
+    const updatedSnap = await docRef.get();
+    return serializeGalleryDetail(updatedSnap.data() as GalleryEventDoc);
   }
 
-  /**
-   * Hard delete gallery event
-   */
   async deleteGalleryEvent(slug: string): Promise<{ success: boolean; slug: string }> {
-    // TODO: Hard delete gallery_events/{slug} from Firestore
-    throw new Error(`[TODO] deleteGalleryEvent not implemented for slug: ${slug}`);
+    const docRef = db.collection(COLLECTIONS.GALLERY_EVENTS).doc(slug);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      throw new AppError(404, ERROR_CODES.GALLERY_NOT_FOUND, `Gallery event '${slug}' not found.`);
+    }
+
+    await docRef.delete();
+    return { success: true, slug };
   }
 }
 
