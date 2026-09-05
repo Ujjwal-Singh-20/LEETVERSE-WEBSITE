@@ -5,12 +5,16 @@ import {
   GalleryListingBlob,
   MembersListingBlob,
   ProjectsListingBlob,
+  RemindersListingBlob,
   GalleryEventDoc,
   ProjectDoc,
   MemberDoc,
+  ReminderDoc,
 } from '../types';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Timestamp } from 'firebase-admin/firestore';
+import { blobCacheService } from '../services/blobCache.service';
 
 function formatTimestamp(timestamp: any): string {
   if (!timestamp) return new Date().toISOString();
@@ -20,7 +24,7 @@ function formatTimestamp(timestamp: any): string {
   return new Date().toISOString();
 }
 
-async function generateMembersListing(): Promise<MembersListingBlob> {
+export async function generateMembersListing(): Promise<MembersListingBlob> {
   const domainsSnap = await db.collection(COLLECTIONS.MEMBERS).listDocuments();
 
   const domains = await Promise.all(
@@ -58,7 +62,7 @@ async function generateMembersListing(): Promise<MembersListingBlob> {
   };
 }
 
-async function generateProjectsListing(): Promise<ProjectsListingBlob> {
+export async function generateProjectsListing(): Promise<ProjectsListingBlob> {
   const snap = await db
     .collection(COLLECTIONS.PROJECTS)
     .orderBy('createdAt', 'desc')
@@ -70,7 +74,8 @@ async function generateProjectsListing(): Promise<ProjectsListingBlob> {
       slug: data.slug,
       title: data.title,
       description: data.description,
-      thumbnail: data.images[0] || '',
+      thumbnail: (data.images && data.images[0]) || '',
+      images: data.images || [],
       members: data.members || [],
     };
   });
@@ -78,7 +83,7 @@ async function generateProjectsListing(): Promise<ProjectsListingBlob> {
   return { generatedAt: new Date().toISOString(), projects };
 }
 
-async function generateGalleryListing(): Promise<GalleryListingBlob> {
+export async function generateGalleryListing(): Promise<GalleryListingBlob> {
   const snap = await db
     .collection(COLLECTIONS.GALLERY_EVENTS)
     .orderBy('date', 'desc')
@@ -98,63 +103,92 @@ async function generateGalleryListing(): Promise<GalleryListingBlob> {
   return { generatedAt: new Date().toISOString(), events };
 }
 
+export async function generateRemindersListing(): Promise<RemindersListingBlob> {
+  const now = Timestamp.now();
+  const snap = await db
+    .collection(COLLECTIONS.REMINDERS)
+    .where('endAt', '>=', now)
+    .orderBy('endAt', 'asc')
+    .get();
+
+  const reminders = snap.docs.map((doc) => {
+    const data = doc.data() as ReminderDoc;
+    return {
+      docId: doc.id,
+      text: data.text,
+      startAt: formatTimestamp(data.startAt),
+      endAt: formatTimestamp(data.endAt),
+      targetSection: data.targetSection || 'global',
+    };
+  });
+
+  return { generatedAt: new Date().toISOString(), reminders };
+}
+
 async function uploadToBlob(
   filename: string,
   data: Record<string, unknown>
-): Promise<void> {
+): Promise<string> {
   const { put } = await import('@vercel/blob');
   const json = JSON.stringify(data, null, 2);
-  await put(filename, json, {
+  const result = await put(filename, json, {
     access: 'public',
     token: ENV.BLOB_READ_WRITE_TOKEN,
+    addRandomSuffix: false,
+    contentType: 'application/json',
   });
-  console.log(`  ✅ Uploaded ${filename} to Vercel Blob`);
+  console.log(`  ✅ Uploaded ${filename} to Vercel Blob (${result.url})`);
+  blobCacheService.setUrl(filename, result.url);
+  return result.url;
 }
 
-function saveToLocal(filename: string, data: Record<string, unknown>): void {
-  const cacheDir = path.join(process.cwd(), 'dist', 'cache');
-  if (!fs.existsSync(cacheDir)) {
-    fs.mkdirSync(cacheDir, { recursive: true });
+export async function generateAllCaches(): Promise<{
+  timestamp: string;
+  files: string[];
+  destination: 'blob';
+}> {
+  console.log('🚀 Starting LeetVerse Vercel Blob Cache Refresh Job...');
+  
+  if (!ENV.BLOB_READ_WRITE_TOKEN || ENV.BLOB_READ_WRITE_TOKEN.includes('vercel_blob_rw_xxx')) {
+    throw new Error(
+      'BLOB_READ_WRITE_TOKEN is not configured. Cache generation requires a valid Vercel Blob read/write token.'
+    );
   }
-  const filePath = path.join(cacheDir, filename);
-  fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
-  console.log(`  💾 Saved ${filePath} locally (no BLOB_READ_WRITE_TOKEN)`);
+
+  const files: string[] = [];
+
+  console.log('\n📋 Generating members listing blob...');
+  const membersBlob = await generateMembersListing();
+  await uploadToBlob('members-listing.json', membersBlob as any);
+  files.push('members-listing.json');
+
+  console.log('📋 Generating projects listing blob...');
+  const projectsBlob = await generateProjectsListing();
+  await uploadToBlob('projects-listing.json', projectsBlob as any);
+  files.push('projects-listing.json');
+
+  console.log('📋 Generating gallery listing blob...');
+  const galleryBlob = await generateGalleryListing();
+  await uploadToBlob('gallery-listing.json', galleryBlob as any);
+  files.push('gallery-listing.json');
+
+  console.log('📋 Generating reminders listing blob...');
+  const remindersBlob = await generateRemindersListing();
+  await uploadToBlob('reminders-listing.json', remindersBlob as any);
+  files.push('reminders-listing.json');
+
+  console.log('\n✨ Vercel Blob cache refresh complete!');
+  return {
+    timestamp: new Date().toISOString(),
+    files,
+    destination: 'blob',
+  };
 }
 
-async function run(): Promise<void> {
-  console.log('🚀 Starting LeetVerse Cache Refresh Job...');
-  const useBlob = !!ENV.BLOB_READ_WRITE_TOKEN;
-
-  try {
-    console.log('\n📋 Generating members listing...');
-    const membersBlob = await generateMembersListing();
-    if (useBlob) {
-      await uploadToBlob('members-listing.json', membersBlob as any);
-    } else {
-      saveToLocal('members-listing.json', membersBlob as any);
-    }
-
-    console.log('📋 Generating projects listing...');
-    const projectsBlob = await generateProjectsListing();
-    if (useBlob) {
-      await uploadToBlob('projects-listing.json', projectsBlob as any);
-    } else {
-      saveToLocal('projects-listing.json', projectsBlob as any);
-    }
-
-    console.log('📋 Generating gallery listing...');
-    const galleryBlob = await generateGalleryListing();
-    if (useBlob) {
-      await uploadToBlob('gallery-listing.json', galleryBlob as any);
-    } else {
-      saveToLocal('gallery-listing.json', galleryBlob as any);
-    }
-
-    console.log('\n✨ Cache refresh complete!');
-  } catch (error) {
+// Auto-run if executed directly via CLI
+if (require.main === module) {
+  generateAllCaches().catch((error) => {
     console.error('❌ Cache refresh failed:', error);
     process.exit(1);
-  }
+  });
 }
-
-run();

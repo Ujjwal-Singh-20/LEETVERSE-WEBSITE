@@ -60,3 +60,6 @@ scratch/
 backend-full
 docs
 firestore.rules
+seed_db.py
+leetverse-website-firebase-adminsdk-fbsvc-291a2e70fe.json
+mascot.html

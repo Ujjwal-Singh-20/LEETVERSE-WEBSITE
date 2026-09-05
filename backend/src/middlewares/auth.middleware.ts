@@ -100,6 +100,19 @@ export const requireAdminAuth = async (
       });
       return;
     }
+    if (
+      error.code === 'auth/invalid-id-token' ||
+      error.code === 'auth/argument-error' ||
+      (typeof error.message === 'string' && error.message.includes('Decoding Firebase ID token failed'))
+    ) {
+      res.status(401).json({
+        error: {
+          code: ERROR_CODES.INVALID_TOKEN,
+          message: 'Invalid or malformed authorization token.',
+        },
+      });
+      return;
+    }
     next(error);
   }
 };

@@ -9,7 +9,7 @@ export class AdminProjectController {
   async getProjects(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const projects = await projectService.getProjects();
-      res.status(200).json(projects);
+      res.status(200).json({ projects });
     } catch (error) {
       next(error);
     }

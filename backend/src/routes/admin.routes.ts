@@ -24,6 +24,9 @@ import {
   gallerySlugParamSchema,
   updateGalleryEventSchema,
 } from '../schemas/gallery.schema';
+import { adminReminderController } from '../controllers/admin.reminder.controller';
+import { adminCacheController } from '../controllers/admin.cache.controller';
+import { createReminderSchema, reminderParamSchema } from '../schemas/reminder.schema';
 
 const router = Router();
 
@@ -86,5 +89,13 @@ router.delete(
 /* ----------------- Image Uploads ----------------- */
 router.post('/upload/single', uploadSingleImage, uploadController.uploadSingle);
 router.post('/upload/multiple', uploadMultipleImages, uploadController.uploadMultiple);
+
+/* ----------------- Reminders Management ----------------- */
+router.get('/reminders', adminReminderController.getReminders);
+router.post('/reminders', validateBody(createReminderSchema), adminReminderController.createReminder);
+router.delete('/reminders/:docId', validateParams(reminderParamSchema), adminReminderController.deleteReminder);
+
+/* ----------------- Operational Cache Refresh ----------------- */
+router.post('/cache/refresh', adminCacheController.refreshCache);
 
 export const adminRoutes = router;

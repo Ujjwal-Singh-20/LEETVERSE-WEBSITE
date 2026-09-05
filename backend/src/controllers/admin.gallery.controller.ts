@@ -9,7 +9,7 @@ export class AdminGalleryController {
   async getGalleryEvents(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const events = await galleryService.getGalleryListings();
-      res.status(200).json(events);
+      res.status(200).json({ events });
     } catch (error) {
       next(error);
     }

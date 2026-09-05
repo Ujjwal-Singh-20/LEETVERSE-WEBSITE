@@ -23,8 +23,16 @@ const allowedOrigins = getAllowedOrigins();
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, cron-job.org /health keep-alive)
+      // Allow requests with no origin (e.g. mobile apps, curl, keep-alive)
       if (!origin) return callback(null, true);
+
+      // In development / non-production, allow any localhost or 127.0.0.1 origin
+      if (
+        ENV.NODE_ENV !== 'production' &&
+        (/^http:\/\/localhost(:\d+)?$/.test(origin) || /^http:\/\/127\.0\.0\.1(:\d+)?$/.test(origin))
+      ) {
+        return callback(null, true);
+      }
 
       // In production, block any wildcard origins
       if (allowedOrigins.includes('*') && ENV.NODE_ENV !== 'production') {

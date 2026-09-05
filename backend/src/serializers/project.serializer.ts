@@ -20,6 +20,7 @@ export const serializeProject = (data: ProjectDoc): ProjectResponse => {
     title: data.title,
     description: data.description,
     images: data.images || [],
+    thumbnail: (data.images && data.images[0]) || '',
     members: data.members || [],
     createdAt: formatTimestamp(data.createdAt),
     updatedAt: formatTimestamp(data.updatedAt),

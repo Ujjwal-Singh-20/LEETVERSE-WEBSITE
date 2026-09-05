@@ -53,12 +53,14 @@ export interface ProjectDoc {
   title: string;
   description: string;
   images: string[];
+  thumbnail?: string;
   members: ProjectMemberSnapshot[];
   createdAt: firestore.Timestamp | firestore.FieldValue | string | Date;
   updatedAt: firestore.Timestamp | firestore.FieldValue | string | Date;
 }
 
 export interface ProjectResponse extends Omit<ProjectDoc, 'createdAt' | 'updatedAt'> {
+  thumbnail?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -128,6 +130,7 @@ export interface ProjectsListingBlob {
     title: string;
     description: string;
     thumbnail: string;
+    images?: string[];
     members: ProjectMemberSnapshot[];
   }>;
 }
@@ -140,5 +143,37 @@ export interface GalleryListingBlob {
     shortDesc: string;
     thumbnail: string;
     date: string;
+  }>;
+}
+
+export type ReminderTargetSection = 'hero' | 'members' | 'projects' | 'gallery' | 'global';
+
+export interface ReminderDoc {
+  text: string;
+  startAt: firestore.Timestamp | firestore.FieldValue | string | Date;
+  endAt: firestore.Timestamp | firestore.FieldValue | string | Date;
+  targetSection?: ReminderTargetSection;
+  createdAt: firestore.Timestamp | firestore.FieldValue | string | Date;
+  updatedAt: firestore.Timestamp | firestore.FieldValue | string | Date;
+}
+
+export interface ReminderResponse {
+  docId: string;
+  text: string;
+  startAt: string;
+  endAt: string;
+  targetSection: ReminderTargetSection;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RemindersListingBlob {
+  generatedAt: string;
+  reminders: Array<{
+    docId: string;
+    text: string;
+    startAt: string;
+    endAt: string;
+    targetSection: ReminderTargetSection;
   }>;
 }

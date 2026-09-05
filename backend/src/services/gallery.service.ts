@@ -5,7 +5,7 @@ import { AppError } from '../middlewares/error.middleware';
 import { CreateGalleryEventInput, UpdateGalleryEventInput } from '../schemas/gallery.schema';
 import { serializeGalleryListingItem, serializeGalleryDetail } from '../serializers/gallery.serializer';
 import { GalleryEventDoc, GalleryEventResponse } from '../types';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 export class GalleryService {
   async getGalleryListings(): Promise<Array<{ slug: string; eventName: string; shortDesc: string; thumbnail: string; date: string }>> {
@@ -45,13 +45,14 @@ export class GalleryService {
     }
 
     const now = FieldValue.serverTimestamp();
+    const eventDate = Timestamp.fromDate(new Date(data.date));
     const eventData: Record<string, any> = {
       slug: data.slug,
       eventName: data.eventName,
       shortDesc: data.shortDesc,
       thumbnail: data.thumbnail,
       images: data.images || [],
-      date: data.date,
+      date: eventDate,
       createdAt: now,
       updatedAt: now,
     };
@@ -60,9 +61,10 @@ export class GalleryService {
 
     return serializeGalleryDetail({
       ...eventData,
+      date: data.date,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    } as GalleryEventDoc);
+    } as unknown as GalleryEventDoc);
   }
 
   async updateGalleryEvent(slug: string, data: UpdateGalleryEventInput): Promise<GalleryEventResponse> {
@@ -74,6 +76,10 @@ export class GalleryService {
     }
 
     const updates: Record<string, any> = { ...data, updatedAt: FieldValue.serverTimestamp() };
+    if (data.date) {
+      updates.date = Timestamp.fromDate(new Date(data.date));
+    }
+
     await docRef.update(updates);
 
     const updatedSnap = await docRef.get();

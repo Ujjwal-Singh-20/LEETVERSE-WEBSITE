@@ -9,7 +9,7 @@ export class AdminMemberController {
   async getMemberTree(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       const tree = await memberService.getMemberTree();
-      res.status(200).json(tree);
+      res.status(200).json({ tree });
     } catch (error) {
       next(error);
     }

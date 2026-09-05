@@ -8,4 +8,5 @@ export const COLLECTIONS = {
   PROJECTS: 'projects',
   GALLERY_EVENTS: 'gallery_events',
   ADMINS: 'admins',
+  REMINDERS: 'reminders',
 } as const;

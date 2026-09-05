@@ -2,12 +2,22 @@ import { Request, Response, NextFunction } from 'express';
 import { memberService } from '../services/member.service';
 import { galleryService } from '../services/gallery.service';
 import { projectService } from '../services/project.service';
+import { blobCacheService } from '../services/blobCache.service';
+import { MembersListingBlob, ProjectsListingBlob, GalleryListingBlob } from '../types';
+import { ENV } from '../config/env';
 
 export class PublicController {
   async getBusinessCard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const username = String(req.params.username);
       const member = await memberService.getPublicMemberByUsername(username);
+
+      // If a browser manually navigated to /u/:username directly on the backend server, redirect to frontend SPA
+      if (req.path === `/u/${username}` && req.accepts('html') && !req.accepts('json') && !req.xhr) {
+        const primaryFrontend = (ENV.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
+        return res.redirect(`${primaryFrontend}/u/${username}`);
+      }
+
       res.status(200).json(member);
     } catch (error) {
       next(error);
@@ -26,6 +36,14 @@ export class PublicController {
 
   async getProjectsListing(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      // 1. Priority: Attempt to read static cache from Vercel Blob
+      const cached = await blobCacheService.getBlobData<ProjectsListingBlob>('projects-listing.json');
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
+
+      // 2. Fallback: Direct Firestore DB read
       const projects = await projectService.getProjects();
       res.status(200).json({
         generatedAt: new Date().toISOString(),
@@ -38,6 +56,14 @@ export class PublicController {
 
   async getGalleryListing(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      // 1. Priority: Attempt to read static cache from Vercel Blob
+      const cached = await blobCacheService.getBlobData<GalleryListingBlob>('gallery-listing.json');
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
+
+      // 2. Fallback: Direct Firestore DB read
       const events = await galleryService.getGalleryListings();
       res.status(200).json({
         generatedAt: new Date().toISOString(),
@@ -50,6 +76,14 @@ export class PublicController {
 
   async getMembersListing(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
+      // 1. Priority: Attempt to read static cache from Vercel Blob
+      const cached = await blobCacheService.getBlobData<MembersListingBlob>('members-listing.json');
+      if (cached) {
+        res.status(200).json(cached);
+        return;
+      }
+
+      // 2. Fallback: Direct Firestore DB read
       const domains = await memberService.getActiveMembersByDomain();
       res.status(200).json({
         generatedAt: new Date().toISOString(),

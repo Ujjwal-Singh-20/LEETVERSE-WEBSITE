@@ -13,6 +13,7 @@ export class AuthController {
       res.status(200).json({
         message: 'Authentication successful',
         admin,
+        user: admin,
       });
     } catch (error) {
       next(error);
@@ -26,6 +27,7 @@ export class AuthController {
     try {
       res.status(200).json({
         admin: req.admin,
+        user: req.admin,
       });
     } catch (error) {
       next(error);

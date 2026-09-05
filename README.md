@@ -1,6 +1,6 @@
 # LeetVerse Official Website
 
-The official repository for the **LeetVerse Website** — a platform for coding, DSA, member portfolios, team domains, project showcases, and event galleries.
+The official repository for the **LeetVerse Website** — a modern web application for coding, DSA, member portfolios, team domains, project showcases, event galleries, and club administration.
 
 ---
 
@@ -8,30 +8,40 @@ The official repository for the **LeetVerse Website** — a platform for coding,
 
 ```
 LEETVERSE-WEBSITE/
-├── docs/                               # Architecture & Database Schema specs
+├── docs/                               # Architecture & Database Schema specifications
 │   ├── leetverse-website-plan (1).md
 │   └── leetverse-db-schema.md
-├── backend/                            # Express.js + TypeScript API (Render)
+├── backend/                            # Express.js + TypeScript REST API (Node.js 22+)
 │   ├── src/
 │   │   ├── config/                     # Firebase Admin, Cloudinary, Env loaders
-│   │   ├── constants/                  # Collections & Error codes
-│   │   ├── controllers/                # Public, Admin, Auth & Upload controllers
+│   │   ├── constants/                  # Collections & Error codes enums
+│   │   ├── controllers/                # Public, Admin, Auth, Upload & Reminders controllers
 │   │   ├── middlewares/                # Auth, Zod validation, Rate limits, Multer, Error handler
 │   │   ├── routes/                     # Public, Admin & Auth routers
 │   │   ├── schemas/                    # Zod validation schemas
 │   │   ├── scripts/                    # Vercel Blob Cache Refresh job
 │   │   ├── serializers/                # Public allowlist serializers (strips rollNo)
-│   │   ├── services/                   # Firestore transactions, Cloudinary integration
+│   │   ├── services/                   # Firestore transactions, Cloudinary & Vercel Blob services
 │   │   ├── types/                      # TypeScript definitions & interfaces
 │   │   └── server.ts                   # Express server entrypoint & /health route
 │   ├── .env.example
 │   ├── package.json
-│   └── tsconfig.json
-├── frontend/                           # React (Vite + TypeScript) SPA (Vercel) - [Planned]
-│   └── README.md
-├── .gitignore                          # Monorepo gitignore
+│   ├── tsconfig.json
+│   └── README.md                       # Comprehensive Backend architecture & API reference
+├── frontend/                           # React 18 (Vite + TypeScript) SPA with bespoke design system
+│   ├── src/
+│   │   ├── components/                 # Canvas mesh hero, navigation, mascot, gallery deck, modals
+│   │   ├── context/                    # AuthContext (Google Sign-In + Admin token exchange)
+│   │   ├── pages/                      # Home, Members, Projects, Gallery, BusinessCard, NotFound, Admin
+│   │   ├── services/                   # Axios API service client
+│   │   ├── types/                      # Frontend TypeScript interfaces
+│   │   └── index.css                   # Atmospheric design tokens & global styling
+│   ├── .env.example
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── README.md                       # Frontend design system & component documentation
 ├── firestore.rules                     # Deny-all client rules (defense-in-depth)
-├── package.json                        # Root workspace scripts
+├── seed_db.py                          # Comprehensive database seeder script
 └── README.md                           # Documentation & quickstart
 ```
 
@@ -39,63 +49,100 @@ LEETVERSE-WEBSITE/
 
 ## 🛠️ Tech Stack
 
+- **Frontend:** React 18, Vite, TypeScript, Lucide Icons, HTML5 Canvas (3D low-poly interactive mesh)
 - **Backend:** Express.js, TypeScript, Node.js (v22+)
-- **Database:** Firebase Firestore (accessed exclusively via Firebase Admin SDK)
-- **Image Hosting:** Cloudinary
-- **Caching:** Vercel Blob (with live direct backend fallback in local dev)
+- **Database:** Firebase Firestore (accessed exclusively via Firebase Admin SDK; client access denied)
+- **Image Hosting:** Cloudinary CDN
+- **Caching:** Vercel Blob CDN (public endpoints prioritize Vercel Blob static JSON, falling back gracefully to live Firestore DB)
 - **Rate Limiting:** `express-rate-limit` (tiered by route sensitivity)
-- **Validation:** Zod (server-side input validation)
+- **Validation:** Zod (strict runtime schema validation)
+- **Authentication:** Firebase Auth (Google Sign-In) + server-side Firestore `admins` whitelist verification
 - **Deployment:** Render (Backend API), Vercel (Frontend SPA)
-- **Keep-Alive:** cron-job.org (hitting `GET /health` to prevent Render cold starts)
+- **Keep-Alive:** cron-job.org (pinging `GET /health` to prevent Render free-tier cold starts)
 
 ---
 
-## ⚡ Quickstart — Backend
+## ⚡ Quickstart
 
-### 1. Install Dependencies
+### 1. Backend Setup
 
 ```bash
 cd backend
 npm install
-```
-
-### 2. Environment Configuration
-
-Copy `.env.example` to `.env` inside `backend/`:
-
-```bash
 cp .env.example .env
 ```
 
-Configure the following variables in `backend/.env`:
+Configure the environment variables in `backend/.env`:
 
 ```env
-# Server
 PORT=5000
 NODE_ENV=development
 FRONTEND_URL=http://localhost:5173,http://localhost:3000
 
-# Firebase Admin Credentials (Option A: Split fields)
+# Firebase Admin Credentials
 FIREBASE_PROJECT_ID=your-firebase-project-id
 FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxx@your-firebase-project-id.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY----...\n-----END PRIVATE KEY-----\n"
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 
 # Cloudinary
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
-# Vercel Blob (Optional for local dev, required for cache refresh job)
+# Vercel Blob (Required for static cache generation & CDN acceleration)
 BLOB_READ_WRITE_TOKEN=vercel_blob_rw_xxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### 3. Run Development Server
+Start the backend development server:
 
 ```bash
 npm run dev
 ```
 
-The API will be live at `http://localhost:5000`.
+The API will be running at `http://localhost:5000`.
+
+---
+
+### 2. Frontend Setup
+
+```bash
+cd frontend
+npm install
+cp .env.example .env
+```
+
+Configure `frontend/.env`:
+
+```env
+# Backend API Base URL
+VITE_API_BASE_URL=http://localhost:5000
+
+# Firebase Client SDK Credentials (for /admin Google Sign-In)
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+Start the frontend development server:
+
+```bash
+npm run dev
+```
+
+The web application will be live at `http://localhost:5173`.
+
+---
+
+### 3. Database Seeding (Optional)
+
+To populate Firestore with initial domains, members, projects, gallery events, reminders, and admin records:
+
+```bash
+python seed_db.py
+```
 
 ---
 
@@ -105,79 +152,74 @@ The API will be live at `http://localhost:5000`.
 
 | Method | Endpoint | Rate Limit | Description |
 |---|---|---|---|
-| `GET` | `/` | None | API root welcome & endpoint directory |
+| `GET` | `/` | None | API root status & endpoint index |
 | `GET` | `/health` | None | Lightweight keep-alive status check |
-| `GET` | `/u/:username` | 25 req/min (IP) | **Live** member digital business card (strips `rollNo`) |
-| `GET` | `/api/gallery/:slug/images` | 60 req/min (IP) | **Live** fetch of full `images[]` for event popup |
-| `GET` | `/api/projects` | 60 req/min (IP) | Direct fallback projects listing |
-| `GET` | `/api/gallery` | 60 req/min (IP) | Direct fallback gallery listing |
-| `GET` | `/api/members` | 60 req/min (IP) | Direct fallback active members by domain |
-| `GET` | `/api/og/:username` | 60 req/min (IP) | Server-rendered OpenGraph meta tags for crawlers |
-| `GET` | `/api/og/projects/:slug`| 60 req/min (IP) | Server-rendered OpenGraph meta tags for projects |
+| `GET` | `/api/u/:username` | 25 req/min (IP) | **Live** member digital business card (strips `rollNo`) |
+| `GET` | `/u/:username` | 25 req/min (IP) | Direct visit helper (redirects browser to frontend SPA) |
+| `GET` | `/api/members` | 60 req/min (IP) | Active members grouped by domain (Vercel Blob priority, DB fallback) |
+| `GET` | `/api/projects` | 60 req/min (IP) | Projects showcase listing (Vercel Blob priority, DB fallback) |
+| `GET` | `/api/gallery` | 60 req/min (IP) | Events gallery listing (Vercel Blob priority, DB fallback) |
+| `GET` | `/api/gallery/:slug/images` | 60 req/min (IP) | **Live** fetch of full `images[]` array for event lightboxes |
+| `GET` | `/api/reminders` | 60 req/min (IP) | Active & upcoming mascot reminders (Vercel Blob priority, DB fallback) |
+| `GET` | `/api/og/:username` | 60 req/min (IP) | Server-rendered OpenGraph metadata for social link crawlers |
+| `GET` | `/api/og/projects/:slug` | 60 req/min (IP) | Server-rendered OpenGraph metadata for project link crawlers |
 
 ### Admin Auth Routes
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/admin/session` | Verifies Firebase Google ID token against `admins` collection |
-| `GET` | `/api/admin/me` | Returns authenticated admin profile |
+| `POST` | `/api/admin/session` | Exchanges Firebase Google ID token for verified admin session |
+| `GET` | `/api/admin/me` | Returns current authenticated admin profile |
 
-### Admin Protected Routes (Bearer Token + `admins` check)
+### Admin Protected Routes (Bearer Token + `admins` Check)
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/api/admin/members/tree` | Expandable tree view of domains and members |
-| `GET` | `/api/admin/usernames/check?username=xyz` | Live username availability check |
-| `POST` | `/api/admin/members` | Atomic creation of member doc + username lookup |
+| `GET` | `/api/admin/members/tree` | Hierarchical domain tree with nested member records |
+| `GET` | `/api/admin/usernames/check?username=xyz` | Real-time username availability checker |
+| `POST` | `/api/admin/members` | Atomic creation of member record and global username lookup |
 | `PATCH` | `/api/admin/members/:domain/:docId` | Single-field autosave on blur (`{ field, value }`) |
-| `DELETE` | `/api/admin/members/:domain/:docId` | Hard delete member & username lookup in transaction |
-| `GET` | `/api/admin/projects` | List all projects |
-| `POST` | `/api/admin/projects` | Create new project |
-| `PATCH` | `/api/admin/projects/:slug` | Update project fields |
-| `DELETE` | `/api/admin/projects/:slug` | Delete project |
-| `GET` | `/api/admin/gallery` | List all gallery events |
-| `GET` | `/api/admin/gallery/:slug` | Get event detail with all images |
-| `POST` | `/api/admin/gallery` | Create gallery event |
-| `PATCH` | `/api/admin/gallery/:slug` | Update gallery event |
-| `DELETE` | `/api/admin/gallery/:slug` | Delete gallery event |
-| `POST` | `/api/admin/upload/single` | Upload single image to Cloudinary |
-| `POST` | `/api/admin/upload/multiple` | Upload up to 10 images to Cloudinary |
+| `DELETE` | `/api/admin/members/:domain/:docId` | Deletes member doc and username lookup in atomic transaction |
+| `GET` | `/api/admin/projects` | Lists all projects |
+| `POST` | `/api/admin/projects` | Creates a new project |
+| `PATCH` | `/api/admin/projects/:slug` | Updates project details |
+| `DELETE` | `/api/admin/projects/:slug` | Deletes a project |
+| `GET` | `/api/admin/gallery` | Lists all gallery events |
+| `GET` | `/api/admin/gallery/:slug` | Retrieves event detail with full `images[]` |
+| `POST` | `/api/admin/gallery` | Creates a new gallery event |
+| `PATCH` | `/api/admin/gallery/:slug` | Updates gallery event fields |
+| `DELETE` | `/api/admin/gallery/:slug` | Deletes gallery event |
+| `GET` | `/api/admin/reminders` | Lists all scheduled mascot reminders |
+| `POST` | `/api/admin/reminders` | Creates a new timed mascot reminder |
+| `DELETE` | `/api/admin/reminders/:docId` | Deletes a mascot reminder |
+| `POST` | `/api/admin/upload/single` | Uploads single image to Cloudinary (returns `{ url, publicId }`) |
+| `POST` | `/api/admin/upload/multiple` | Uploads up to 10 images to Cloudinary (returns `{ urls, count }`) |
+| `POST` | `/api/admin/cache/refresh` | Triggers on-demand static cache rebuild directly from Admin UI |
 
 ---
 
-## 🔒 Standard Error Response Shape
+## 🔄 Cache Refresh Architecture
 
-Every error response adheres strictly to the unified JSON schema:
-
-```json
-{
-  "error": {
-    "code": "USERNAME_TAKEN",
-    "message": "The username 'aditya-r' is already taken."
-  }
-}
-```
-
----
-
-## 🔄 Cache Refresh Job
-
-To compile active members, projects, and gallery listings into static JSON blobs and upload them to Vercel Blob:
+To deliver near-zero latency for public visitors without consuming Firestore read quotas, public listings are compiled into static JSON files hosted on Vercel Blob CDN:
 
 ```bash
+cd backend
 npm run cache:generate
 ```
 
-Outputs generated:
-- `members-listing.json`
-- `projects-listing.json`
-- `gallery-listing.json`
+Generated JSON Blobs:
+1. `members-listing.json` — Active members grouped by domain (strips `rollNo` and alumni).
+2. `projects-listing.json` — Project summaries with precalculated thumbnails and contributor snapshots.
+3. `gallery-listing.json` — Gallery events list with thumbnails and descriptions (excluding heavy `images[]` array).
+4. `reminders-listing.json` — Active and upcoming mascot announcements.
+
+*Note: Admins can also trigger this cache refresh directly inside `/admin` under the **Cache** section.*
 
 ---
 
 ## 🛡️ Security & Defense-in-Depth
 
-1. **Client SDK Denied:** `firestore.rules` enforces `allow read, write: if false;` on all collections. All database operations happen server-side via the Firebase Admin SDK.
-2. **Rate Limiting:** Protects live read endpoints from scrapers and brute force attacks.
-3. **MIME Validation:** Server-side file inspection rejects non-image uploads.
-4. **Serializer Allowlists:** `rollNo` and administrative fields are strictly excluded from public responses.
+1. **Deny-All Client Rules:** `firestore.rules` blocks all client-side reads and writes (`allow read, write: if false;`). Every database operation occurs via the Firebase Admin SDK on the backend.
+2. **Tiered Rate Limiting:** Prevents scraper abuse on live public routes while ensuring high throughput for authenticated admin operations.
+3. **MIME Type Inspection:** Multer memory storage inspects file signatures to block non-image uploads.
+4. **Strict Serializers:** Student university roll numbers (`rollNo`) and audit timestamps are strictly scrubbed from all public API outputs.
