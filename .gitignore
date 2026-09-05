@@ -63,3 +63,4 @@ firestore.rules
 seed_db.py
 leetverse-website-firebase-adminsdk-fbsvc-291a2e70fe.json
 mascot.html
+backend_curl.md
