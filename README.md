@@ -1,6 +1,6 @@
 # LeetVerse Official Website
 
-The official repository for the **LeetVerse Website** — a modern web application for coding, DSA, member portfolios, team domains, project showcases, event galleries, and club administration.
+The official repository for the **LeetVerse Website** — a web application for member portfolios, team domains, project showcases, event galleries, and club administration.
 
 ---
 
@@ -28,7 +28,7 @@ LEETVERSE-WEBSITE/
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── README.md                       # Comprehensive Backend architecture & API reference
-├── frontend/                           # React 18 (Vite + TypeScript) SPA with bespoke design system
+├── frontend/                           # React 18 (Vite + TypeScript) SPA
 │   ├── src/
 │   │   ├── components/                 # Canvas mesh hero, navigation, mascot, gallery deck, modals
 │   │   ├── context/                    # AuthContext (Google Sign-In + Admin token exchange)
@@ -40,8 +40,7 @@ LEETVERSE-WEBSITE/
 │   ├── package.json
 │   ├── vite.config.ts
 │   └── README.md                       # Frontend design system & component documentation
-├── firestore.rules                     # Deny-all client rules (defense-in-depth)
-├── seed_db.py                          # Comprehensive database seeder script
+├── firestore.rules                     # Deny-all client rules
 └── README.md                           # Documentation & quickstart
 ```
 
@@ -133,16 +132,6 @@ npm run dev
 ```
 
 The web application will be live at `http://localhost:5173`.
-
----
-
-### 3. Database Seeding (Optional)
-
-To populate Firestore with initial domains, members, projects, gallery events, reminders, and admin records:
-
-```bash
-python seed_db.py
-```
 
 ---
 
