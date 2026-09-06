@@ -1,6 +1,28 @@
 {
   "rewrites": [
     {
+      "source": "/u/:username",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|Discordbot|TelegramBot|Slackbot|LinkedInBot).*"
+        }
+      ],
+      "destination": "https://leetverse-website.onrender.com/api/og/:username"
+    },
+    {
+      "source": "/projects/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(WhatsApp|facebookexternalhit|Twitterbot|Discordbot|TelegramBot|Slackbot|LinkedInBot).*"
+        }
+      ],
+      "destination": "https://leetverse-website.onrender.com/api/og/projects/:slug"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

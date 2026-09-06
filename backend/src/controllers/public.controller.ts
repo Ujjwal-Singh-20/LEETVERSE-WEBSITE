@@ -101,23 +101,37 @@ export class PublicController {
 
       const title = `${member.name} (@${member.username}) | LeetVerse`;
       const description = member.bio || `${member.position} at LeetVerse`;
-      const image = member.photoUrl || '';
-      const profileUrl = `/u/${member.username}`;
+      
+      const defaultBanner = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80';
+      let image = member.photoUrl || defaultBanner;
+
+      // Optimize Cloudinary URLs for WhatsApp/social cards: face-centered crop, 1200x630, compressed JPG
+      if (image.includes('res.cloudinary.com') && image.includes('/upload/') && !image.includes('/upload/w_')) {
+        image = image.replace('/upload/', '/upload/w_1200,h_630,c_fill,g_face,q_auto,f_jpg/');
+      }
+
+      const baseUrl = getFrontendBaseUrl();
+      const profileUrl = `${baseUrl}/u/${member.username}`;
 
       const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>${escapeHtml(title)}</title>
+  <meta property="og:site_name" content="LeetVerse">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:type" content="profile">
   <meta property="og:url" content="${escapeHtml(profileUrl)}">
-  ${image ? `<meta property="og:image" content="${escapeHtml(image)}">` : ''}
-  <meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}">
+  <meta property="og:image" content="${escapeHtml(image)}">
+  <meta property="og:image:secure_url" content="${escapeHtml(image)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
-  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ''}
+  <meta name="twitter:image" content="${escapeHtml(image)}">
   <meta http-equiv="refresh" content="0;url=${escapeHtml(profileUrl)}">
 </head>
 <body>
@@ -139,23 +153,36 @@ export class PublicController {
 
       const title = `${project.title} | LeetVerse Projects`;
       const description = project.description;
-      const image = project.images[0] || '';
-      const projectUrl = `/projects/${project.slug}`;
+      const defaultBanner = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80';
+      let image = (project.images && project.images[0]) || defaultBanner;
+
+      // Optimize Cloudinary URLs for WhatsApp/social cards
+      if (image.includes('res.cloudinary.com') && image.includes('/upload/') && !image.includes('/upload/w_')) {
+        image = image.replace('/upload/', '/upload/w_1200,h_630,c_fill,q_auto,f_jpg/');
+      }
+
+      const baseUrl = getFrontendBaseUrl();
+      const projectUrl = `${baseUrl}/projects/${project.slug}`;
 
       const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>${escapeHtml(title)}</title>
+  <meta property="og:site_name" content="LeetVerse">
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:type" content="website">
   <meta property="og:url" content="${escapeHtml(projectUrl)}">
-  ${image ? `<meta property="og:image" content="${escapeHtml(image)}">` : ''}
-  <meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}">
+  <meta property="og:image" content="${escapeHtml(image)}">
+  <meta property="og:image:secure_url" content="${escapeHtml(image)}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
-  ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}">` : ''}
+  <meta name="twitter:image" content="${escapeHtml(image)}">
   <meta http-equiv="refresh" content="0;url=${escapeHtml(projectUrl)}">
 </head>
 <body>
@@ -178,6 +205,14 @@ function escapeHtml(str: string): string {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+function getFrontendBaseUrl(): string {
+  const allowed = (ENV.FRONTEND_URL || 'https://leetverse-website.vercel.app').split(',');
+  const vercelUrl = allowed.find((u) => u.includes('vercel.app')) || allowed[0] || 'http://localhost:5173';
+  const trimmed = vercelUrl.trim();
+  const valid = trimmed.startsWith('http://') || trimmed.startsWith('https://') ? trimmed : `https://${trimmed}`;
+  return valid.replace(/\/+$/, '');
 }
 
 export const publicController = new PublicController();
