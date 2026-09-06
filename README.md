@@ -212,3 +212,22 @@ Generated JSON Blobs:
 2. **Tiered Rate Limiting:** Prevents scraper abuse on live public routes while ensuring high throughput for authenticated admin operations.
 3. **MIME Type Inspection:** Multer memory storage inspects file signatures to block non-image uploads.
 4. **Strict Serializers:** Student university roll numbers (`rollNo`) and audit timestamps are strictly scrubbed from all public API outputs.
+
+---
+
+## 🖼️ Social Previews & Dynamic OpenGraph (OG)
+
+Because React is a Client-Side Rendered (CSR) Single Page Application, social media crawlers (WhatsApp, Twitter/X, Discord, LinkedIn, Facebook) cannot execute JavaScript to parse dynamic metadata. LeetVerse resolves this using a hybrid edge-routing and server-rendered OpenGraph architecture:
+
+1. **Edge Scraper Interception (`vercel.json`):**
+   - Vercel edge routes inspect incoming `User-Agent` headers.
+   - When a social crawler (e.g. `WhatsApp`, `facebookexternalhit`, `Twitterbot`, `Discordbot`, `LinkedInBot`) requests `/u/:username` or `/projects/:slug`, Vercel proxies the request directly to the backend OpenGraph endpoints (`/api/og/:username` or `/api/og/projects/:slug`).
+   - Regular human visitors are served the React SPA (`index.html`).
+2. **Dynamic Member vs. Brand OG Image Rendering:**
+   - **Member Link (`/u/:username`):** Dynamically retrieves the member profile and serves their uploaded portrait photo (`member.photoUrl`) in `og:image` and `twitter:image`.
+   - **Fallback & General Routes:** If a member has no photo, or when sharing project/general club links, it falls back to the high-resolution brand banner card (`/og-logo.jpeg`).
+3. **Cloudinary Quota Protection:**
+   - Raw image URLs are delivered directly with zero on-the-fly transformations (`w_1200,h_630,c_fill`). This protects the monthly Cloudinary free-tier transformation credit pool from depletion and avoids 400 errors from strict face detection filters.
+4. **Social Cache Busting:**
+   - Social scrapers (especially WhatsApp) aggressively cache link previews by URL. When testing newly updated member photos or metadata, append a version query parameter (e.g. `https://leetverse-website.vercel.app/u/aditya-r?v=2`).
+

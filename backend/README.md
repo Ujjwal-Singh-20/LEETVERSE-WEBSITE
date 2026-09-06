@@ -18,6 +18,8 @@ The Express.js + TypeScript REST API backend for the **LeetVerse Website**, depl
 10. [File Uploads (Cloudinary Pipeline)](#-file-uploads-cloudinary-pipeline)
 11. [Vercel Blob Caching Architecture](#-vercel-blob-caching-architecture)
 12. [Rate Limiting Matrix](#-rate-limiting-matrix)
+13. [Dynamic OpenGraph & Social Crawler Architecture](#-dynamic-opengraph--social-crawler-architecture)
+
 
 ---
 
@@ -454,3 +456,44 @@ Configured via `express-rate-limit` in `src/middlewares/rateLimiter.ts`:
 | **Admin Login** | 1 min | 8 | Client IP | `POST /api/admin/session` |
 | **General Public** | 1 min | 60 | Client IP | `GET /api/projects`, `GET /api/gallery`, `GET /api/members`, etc. |
 | **Admin Operations** | 1 min | 100 | Admin UID (or IP) | All `/api/admin/*` protected routes |
+
+---
+
+## 🖼 Dynamic OpenGraph & Social Crawler Architecture
+
+### The Problem
+Single Page Applications (SPAs) built with React/Vite render client-side via JavaScript. Popular social crawlers (such as **WhatsApp**, **Twitterbot**, **Discordbot**, **LinkedInBot**, and **facebookexternalhit**) do not execute client-side JavaScript when scraping links; they expect pure server-rendered `<meta>` tags in the initial HTML payload.
+
+### The Solution: Edge Rewrite + Backend OG Rendering
+
+1. **Vercel Edge Rewrite (`frontend/vercel.json`):**
+   Vercel checks the `User-Agent` header of incoming requests:
+   - If the requester is a recognized social scraper visiting `/u/:username` or `/projects/:slug`, Vercel proxies the request directly to the backend:
+     - `/u/:username` ➔ `https://leetverse-website.onrender.com/api/og/:username`
+     - `/projects/:slug` ➔ `https://leetverse-website.onrender.com/api/og/projects/:slug`
+   - If the requester is a regular human browser, it routes cleanly to `/index.html` (the SPA).
+
+2. **Backend Handlers (`src/controllers/public.controller.ts`):**
+   - **`GET /api/og/:username` (`getMemberOG`):**
+     - Resolves the member document via `usernames/{username}`.
+     - Selects the image: Uses `member.photoUrl` if present; falls back to `${baseUrl}/og-logo.jpeg` if no photo is uploaded.
+     - Delivers a minimal, crawler-friendly HTML page containing:
+       - `<meta property="og:title" content="Name | Domain • LeetVerse">`
+       - `<meta property="og:description" content="Bio or position summary">`
+       - `<meta property="og:image" content="...">`
+       - `<meta property="og:image:width" content="1200">`
+       - `<meta property="og:image:height" content="630">`
+       - `<meta name="twitter:card" content="summary_large_image">`
+       - A browser fallback redirect `<script>window.location.href = ...</script>` in case a real user visits the endpoint directly.
+   - **`GET /api/og/projects/:slug` (`getProjectOG`):**
+     - Resolves the project document by slug.
+     - Uses the official brand card `${baseUrl}/og-logo.jpeg` for project link shares.
+
+3. **Cloudinary Free-Tier Quota & Limit Protection:**
+   - Raw Cloudinary URLs are delivered directly with zero on-the-fly transformations (avoiding `w_1200,h_630,c_fill,g_face`).
+   - This protects the monthly Cloudinary transformation quota from depletion and avoids `400 Bad Request` failures from strict face detection algorithms on profile photos.
+
+4. **Testing & Cache Busting:**
+   - WhatsApp and Facebook cache OpenGraph previews aggressively per URL.
+   - To test updated member photos or metadata, append a dummy query parameter (e.g. `https://leetverse-website.vercel.app/u/aditya-r?v=2`) to force the crawler to fetch fresh HTML.
+
