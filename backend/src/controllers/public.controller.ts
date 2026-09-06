@@ -102,13 +102,8 @@ export class PublicController {
       const title = `${member.name} (@${member.username}) | LeetVerse`;
       const description = member.bio || `${member.position} at LeetVerse`;
       
-      const defaultBanner = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80';
-      let image = member.photoUrl || defaultBanner;
-
-      // Optimize Cloudinary URLs for WhatsApp/social cards: face-centered crop, 1200x630, compressed JPG
-      if (image.includes('res.cloudinary.com') && image.includes('/upload/') && !image.includes('/upload/w_')) {
-        image = image.replace('/upload/', '/upload/w_1200,h_630,c_fill,g_face,q_auto,f_jpg/');
-      }
+      const defaultBanner = 'https://res.cloudinary.com/da5j1pl8g/image/upload/v1788717959/leetverse/leetverse_og_banner.jpg';
+      const image = member.photoUrl?.trim() || defaultBanner;
 
       const baseUrl = getFrontendBaseUrl();
       const profileUrl = `${baseUrl}/u/${member.username}`;
@@ -125,9 +120,6 @@ export class PublicController {
   <meta property="og:url" content="${escapeHtml(profileUrl)}">
   <meta property="og:image" content="${escapeHtml(image)}">
   <meta property="og:image:secure_url" content="${escapeHtml(image)}">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
@@ -153,13 +145,8 @@ export class PublicController {
 
       const title = `${project.title} | LeetVerse Projects`;
       const description = project.description;
-      const defaultBanner = 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&auto=format&fit=crop&q=80';
-      let image = (project.images && project.images[0]) || defaultBanner;
-
-      // Optimize Cloudinary URLs for WhatsApp/social cards
-      if (image.includes('res.cloudinary.com') && image.includes('/upload/') && !image.includes('/upload/w_')) {
-        image = image.replace('/upload/', '/upload/w_1200,h_630,c_fill,q_auto,f_jpg/');
-      }
+      // Always use the official LeetVerse logo banner for projects and other non-member routes
+      const image = 'https://res.cloudinary.com/da5j1pl8g/image/upload/v1788717959/leetverse/leetverse_og_banner.jpg';
 
       const baseUrl = getFrontendBaseUrl();
       const projectUrl = `${baseUrl}/projects/${project.slug}`;
@@ -178,7 +165,6 @@ export class PublicController {
   <meta property="og:image:secure_url" content="${escapeHtml(image)}">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta property="og:image:type" content="image/jpeg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="${escapeHtml(title)}">
   <meta name="twitter:description" content="${escapeHtml(description)}">
