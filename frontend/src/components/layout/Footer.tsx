@@ -24,7 +24,18 @@ export const Footer: React.FC = () => {
           }}
         >
           {/* Brand Info */}
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <img
+              src="/logo.png"
+              alt="LeetVerse Logo"
+              style={{
+                width: '32px',
+                height: '32px',
+                objectFit: 'contain',
+                display: 'block',
+                filter: 'drop-shadow(0 0 6px rgba(0, 255, 157, 0.35))',
+              }}
+            />
             <span className="wordmark" style={{ fontSize: 'clamp(1.4rem, 2.2vw, 1.8rem)' }}>
               <span className="wordmark-leet">LEET</span>
               <span className="wordmark-verse">VERSE</span>

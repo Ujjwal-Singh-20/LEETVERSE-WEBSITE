@@ -69,9 +69,21 @@ export const Navbar: React.FC = () => {
           style={{
             display: 'flex',
             alignItems: 'center',
+            gap: '12px',
             textDecoration: 'none',
           }}
         >
+          <img
+            src="/logo.png"
+            alt="LeetVerse Logo"
+            style={{
+              width: '34px',
+              height: '34px',
+              objectFit: 'contain',
+              display: 'block',
+              filter: 'drop-shadow(0 0 8px rgba(0, 255, 157, 0.45))',
+            }}
+          />
           <span className="wordmark" style={{ fontSize: 'clamp(1.3rem, 2vw, 1.6rem)' }}>
             <span className="wordmark-leet">LEET</span>
             <span className="wordmark-verse">VERSE</span>

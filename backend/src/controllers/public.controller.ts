@@ -101,8 +101,8 @@ export class PublicController {
 
       const title = `${member.name} (@${member.username}) | LeetVerse`;
       const description = member.bio || `${member.position} at LeetVerse`;
-      
-      const defaultBanner = 'https://res.cloudinary.com/da5j1pl8g/image/upload/v1788717959/leetverse/leetverse_og_banner.jpg';
+
+      const defaultBanner = 'https://res.cloudinary.com/da5j1pl8g/image/upload/v1788718876/new_logo.jpg_hm8chu.jpg';
       const image = member.photoUrl?.trim() || defaultBanner;
 
       const baseUrl = getFrontendBaseUrl();
@@ -146,7 +146,7 @@ export class PublicController {
       const title = `${project.title} | LeetVerse Projects`;
       const description = project.description;
       // Always use the official LeetVerse logo banner for projects and other non-member routes
-      const image = 'https://res.cloudinary.com/da5j1pl8g/image/upload/v1788717959/leetverse/leetverse_og_banner.jpg';
+      const image = 'https://res.cloudinary.com/da5j1pl8g/image/upload/v1788718876/new_logo.jpg_hm8chu.jpg';
 
       const baseUrl = getFrontendBaseUrl();
       const projectUrl = `${baseUrl}/projects/${project.slug}`;
