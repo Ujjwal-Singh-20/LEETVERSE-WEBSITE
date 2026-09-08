@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <!-- Faint dots on 80px grid (radius 1px, #2ee6a6 at 15% opacity) -->
+  <circle cx="0" cy="0" r="1" fill="#2ee6a6" opacity="0.15"/>
+  <circle cx="80" cy="0" r="1" fill="#2ee6a6" opacity="0.15"/>
+  <circle cx="160" cy="0" r="1" fill="#2ee6a6" opacity="0.15"/>
+  <circle cx="0" cy="80" r="1" fill="#2ee6a6" opacity="0.15"/>
+  <circle cx="80" cy="80" r="1" fill="#2ee6a6" opacity="0.15"/>
+  <circle cx="160" cy="80" r="1" fill="#2ee6a6" opacity="0.15"/>
+  <circle cx="0" cy="160" r="1" fill="#2ee6a6" opacity="0.15"/>
+  <circle cx="80" cy="160" r="1" fill="#2ee6a6" opacity="0.15"/>
+  <circle cx="160" cy="160" r="1" fill="#2ee6a6" opacity="0.15"/>
+
+  <!-- Smooth, unbroken horizontal sine waves across [0, 160] with matching tangents -->
+  <!-- Wave 1: 16% opacity, stroke-width 0.6px -->
+  <path d="M 0 40 C 25 28, 55 28, 80 40 C 105 52, 135 52, 160 40" fill="none" stroke="#2ee6a6" stroke-width="0.6" opacity="0.16"/>
+  <!-- Wave 2: 10% opacity, stroke-width 0.5px -->
+  <path d="M 0 85 C 25 95, 55 95, 80 85 C 105 75, 135 75, 160 85" fill="none" stroke="#2ee6a6" stroke-width="0.5" opacity="0.10"/>
+  <!-- Wave 3: 10% opacity, stroke-width 0.5px -->
+  <path d="M 0 125 C 25 111, 55 111, 80 125 C 105 139, 135 139, 160 125" fill="none" stroke="#2ee6a6" stroke-width="0.5" opacity="0.10"/>
+</svg>

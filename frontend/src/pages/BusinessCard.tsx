@@ -174,7 +174,7 @@ export const BusinessCard: React.FC = () => {
 
       {/* Digital Business Card */}
       <div
-        className="glass-panel"
+        className="glass-panel mc-bg card-bg"
         style={{
           maxWidth: 'clamp(360px, 92vw, 480px)',
           width: '100%',
@@ -183,6 +183,7 @@ export const BusinessCard: React.FC = () => {
           position: 'relative',
           border: '1px solid var(--accent-border)',
           boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px var(--accent-glow-subtle)',
+          overflow: 'hidden',
         }}
       >
         {/* Verified Society Chip */}
@@ -231,28 +232,59 @@ export const BusinessCard: React.FC = () => {
           </button>
         </div>
 
-        {/* Avatar / Photo */}
+        {/* Avatar / Photo with Ambient Enlarged Blurred Photo Glow */}
         <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div
             style={{
-              width: 'clamp(94px, 14vw, 116px)',
-              height: 'clamp(94px, 14vw, 116px)',
-              borderRadius: '50%',
-              margin: '0 auto 18px',
-              background: member.photoUrl
-                ? `url("${member.photoUrl}") center/cover no-repeat`
-                : 'linear-gradient(135deg, #122a1e 0%, #204b36 100%)',
-              border: '3px solid var(--accent-primary)',
-              boxShadow: '0 0 24px var(--accent-glow)',
+              position: 'relative',
+              width: 'clamp(122px, 18vw, 148px)',
+              height: 'clamp(122px, 18vw, 148px)',
+              margin: '0 auto 20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '2.6rem',
-              fontWeight: 800,
-              color: 'var(--text-accent)',
             }}
           >
-            {!member.photoUrl && member.name[0]}
+            {/* Ambient Blurred Photo Glow emitting outward */}
+            <div
+              className="photo-ambient-glow"
+              style={{
+                position: 'absolute',
+                inset: '-12px',
+                borderRadius: '50%',
+                background: member.photoUrl
+                  ? `url("${member.photoUrl}") center/cover no-repeat`
+                  : 'radial-gradient(circle, rgba(79, 242, 174, 0.75) 0%, rgba(18, 42, 30, 0.8) 70%)',
+                filter: 'blur(20px)',
+                opacity: 0.8,
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
+
+            {/* Sharp Foreground Avatar with 2px Ring & Static Glow */}
+            <div
+              className="mc-ring"
+              style={{
+                position: 'relative',
+                zIndex: 1,
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                background: member.photoUrl
+                  ? `url("${member.photoUrl}") center/cover no-repeat`
+                  : 'linear-gradient(135deg, #122a1e 0%, #204b36 100%)',
+                border: '2px solid #4ff2ae',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 'clamp(2.8rem, 4.2vw, 3.4rem)',
+                fontWeight: 800,
+                color: 'var(--text-accent)',
+              }}
+            >
+              {!member.photoUrl && member.name[0]}
+            </div>
           </div>
 
           <h2
@@ -292,13 +324,12 @@ export const BusinessCard: React.FC = () => {
         {member.bio && (
           <div
             style={{
-              padding: '18px',
-              borderRadius: 'var(--radius-sm)',
-              background: 'rgba(6, 13, 10, 0.65)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '1.1rem 0',
+              borderTop: '1px solid #1e3d28',
+              borderBottom: '1px solid #1e3d28',
               fontSize: '1rem',
               lineHeight: 1.65,
-              color: 'var(--text-muted)',
+              color: 'var(--text-accent)',
               marginBottom: '26px',
               textAlign: 'center',
             }}
