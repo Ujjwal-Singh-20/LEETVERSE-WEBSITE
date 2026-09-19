@@ -354,7 +354,7 @@ export const Gallery: React.FC = () => {
                     />
 
                     {/* Subtle Polaroids count pill */}
-                    <div
+                    {/* <div
                       style={{
                         position: 'absolute',
                         bottom: '12px',
@@ -374,7 +374,7 @@ export const Gallery: React.FC = () => {
                     >
                       <Sparkles size={11} />
                       <span>Inspect Deck</span>
-                    </div>
+                    </div> */}
                   </div>
 
                   <div style={{ padding: 'clamp(16px, 2vw, 22px)', flex: 1, display: 'flex', flexDirection: 'column' }}>
