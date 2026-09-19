@@ -31,7 +31,7 @@ export class MemberService {
       throw new AppError(404, ERROR_CODES.MEMBER_NOT_FOUND, 'Member profile not found.');
     }
 
-    return serializePublicMember(memberSnap.data() as MemberDoc);
+    return serializePublicMember(memberSnap.data() as MemberDoc, lookup.domain);
   }
 
   async checkUsernameAvailable(username: string): Promise<{ available: boolean; username: string }> {
@@ -72,6 +72,18 @@ export class MemberService {
 
   async createMember(domain: string, data: CreateMemberInput): Promise<AdminMember> {
     const normalizedUsername = data.username.toLowerCase();
+    const rawDomains = Array.isArray(data.domains) && data.domains.length > 0
+      ? data.domains
+      : (domain ? [domain] : ['general']);
+
+    const cleanDomains = Array.from(
+      new Set(rawDomains.map((d) => String(d).trim().toLowerCase()).filter(Boolean))
+    );
+
+    const primaryDomain = (domain ? domain.trim().toLowerCase() : cleanDomains[0]) || 'general';
+    if (!cleanDomains.includes(primaryDomain)) {
+      cleanDomains.unshift(primaryDomain);
+    }
 
     const result = await db.runTransaction(async (transaction) => {
       const usernameRef = db.collection(COLLECTIONS.USERNAMES).doc(normalizedUsername);
@@ -81,7 +93,7 @@ export class MemberService {
         throw new AppError(400, ERROR_CODES.USERNAME_TAKEN, `Username '${normalizedUsername}' is already taken.`);
       }
 
-      const domainRef = db.collection(COLLECTIONS.MEMBERS).doc(domain);
+      const domainRef = db.collection(COLLECTIONS.MEMBERS).doc(primaryDomain);
       const domainSnap = await transaction.get(domainRef);
       if (!domainSnap.exists) {
         transaction.set(domainRef, { createdAt: FieldValue.serverTimestamp() });
@@ -94,6 +106,8 @@ export class MemberService {
         username: normalizedUsername,
         status: data.status,
         position: data.position,
+        domain: primaryDomain,
+        domains: cleanDomains,
         bio: data.bio || '',
         rollNo: data.rollNo,
         createdAt: now,
@@ -108,11 +122,11 @@ export class MemberService {
       transaction.set(memberRef, memberData);
 
       transaction.set(usernameRef, {
-        domain,
+        domain: primaryDomain,
         docId: memberRef.id,
       });
 
-      return { docId: memberRef.id, domain, memberData, normalizedUsername };
+      return { docId: memberRef.id, domain: primaryDomain, memberData, normalizedUsername };
     });
 
     return serializeAdminMember(result.docId, result.domain, {
@@ -160,13 +174,13 @@ export class MemberService {
         throw new AppError(404, ERROR_CODES.MEMBER_NOT_FOUND, 'Member not found.');
       }
 
-      const memberData = memberSnap.data() as MemberDoc;
-      const usernameRef = db.collection(COLLECTIONS.USERNAMES).doc(memberData.username);
+      const member = memberSnap.data() as MemberDoc;
+      const usernameRef = db.collection(COLLECTIONS.USERNAMES).doc(member.username.toLowerCase());
 
       transaction.delete(memberRef);
       transaction.delete(usernameRef);
 
-      return { username: memberData.username };
+      return { username: member.username };
     });
 
     return { success: true, username: result.username };
@@ -180,41 +194,73 @@ export class MemberService {
       name: string;
       position: string;
       photoUrl: string | null;
+      domains?: string[];
       status: 'active';
     }>;
   }>> {
     const domainsSnap = await db.collection(COLLECTIONS.MEMBERS).listDocuments();
+    const domainNameMap = new Map<string, string>();
+    const domainMembersMap = new Map<string, Array<any>>();
+    const orderedDomainSlugs: string[] = [];
 
-    const domains = await Promise.all(
-      domainsSnap.map(async (domainDoc) => {
-        const membersSnap = await domainDoc
-          .collection(COLLECTIONS.MEMBERS_LISTED)
-          .where('status', '==', 'active')
-          .get();
+    for (const domainDoc of domainsSnap) {
+      const dSlug = domainDoc.id;
+      if (!orderedDomainSlugs.includes(dSlug)) orderedDomainSlugs.push(dSlug);
+      domainNameMap.set(
+        dSlug,
+        dSlug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+      );
+      if (!domainMembersMap.has(dSlug)) {
+        domainMembersMap.set(dSlug, []);
+      }
 
-        const members = membersSnap.docs.map((doc) => {
-          const data = doc.data() as MemberDoc;
-          return {
-            username: data.username,
-            name: data.name,
-            position: data.position,
-            photoUrl: data.photoUrl || null,
-            status: 'active' as const,
-          };
-        });
+      const membersSnap = await domainDoc
+        .collection(COLLECTIONS.MEMBERS_LISTED)
+        .where('status', '==', 'active')
+        .get();
 
-        return {
-          slug: domainDoc.id,
-          name: domainDoc.id
-            .split('-')
-            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-            .join(' '),
-          members,
+      for (const doc of membersSnap.docs) {
+        const data = doc.data() as MemberDoc;
+        const memberDomains = (data.domains && data.domains.length > 0)
+          ? data.domains
+          : [dSlug];
+
+        const memberItem = {
+          username: data.username,
+          name: data.name,
+          position: data.position,
+          photoUrl: data.photoUrl || null,
+          domains: memberDomains,
+          status: 'active' as const,
         };
-      })
-    );
 
-    return domains.filter((d) => d.members.length > 0);
+        // Map this member into all their designated domains
+        for (const targetSlug of memberDomains) {
+          if (!orderedDomainSlugs.includes(targetSlug)) orderedDomainSlugs.push(targetSlug);
+          if (!domainNameMap.has(targetSlug)) {
+            domainNameMap.set(
+              targetSlug,
+              targetSlug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+            );
+          }
+          if (!domainMembersMap.has(targetSlug)) {
+            domainMembersMap.set(targetSlug, []);
+          }
+          const list = domainMembersMap.get(targetSlug)!;
+          if (!list.some((m) => m.username === memberItem.username)) {
+            list.push(memberItem);
+          }
+        }
+      }
+    }
+
+    return orderedDomainSlugs
+      .map((slug) => ({
+        slug,
+        name: domainNameMap.get(slug) || slug,
+        members: domainMembersMap.get(slug) || [],
+      }))
+      .filter((d) => d.members.length > 0);
   }
 }
 

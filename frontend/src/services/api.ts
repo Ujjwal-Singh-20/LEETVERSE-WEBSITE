@@ -184,7 +184,7 @@ export async function updateAdminMemberField(
   domain: string,
   docId: string,
   field: string,
-  value: string | null
+  value: any
 ): Promise<{ member: AdminMember }> {
   return request<{ member: AdminMember }>(
     `/api/admin/members/${encodeURIComponent(domain)}/${encodeURIComponent(docId)}`,

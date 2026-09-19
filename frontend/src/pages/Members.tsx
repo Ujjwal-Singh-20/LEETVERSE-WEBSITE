@@ -217,6 +217,30 @@ const MemberCard: React.FC<{
             {tier.badge}
           </span>
 
+          {/* Multi-Domain tags if member belongs to multiple domains */}
+          {member.domains && member.domains.length > 1 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+              {member.domains.map((d) => (
+                <span
+                  key={d}
+                  style={{
+                    fontSize: '9.5px',
+                    padding: '1px 6px',
+                    borderRadius: '3px',
+                    background: 'rgba(0, 255, 157, 0.05)',
+                    border: '1px solid rgba(0, 255, 157, 0.2)',
+                    color: 'var(--text-accent)',
+                    fontFamily: 'var(--font-mono)',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Bio (if available) */}
           {member.bio && (
             <p

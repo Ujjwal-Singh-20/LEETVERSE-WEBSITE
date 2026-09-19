@@ -337,6 +337,38 @@ export const BusinessCard: React.FC = () => {
             </div>
           )}
 
+          {member.domains && member.domains.length > 0 && member.domains[0] !== 'executive' && (
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'center',
+                gap: '6px',
+                marginBottom: '10px',
+              }}
+            >
+              {member.domains.map((d) => (
+                <span
+                  key={d}
+                  className="mono-tag"
+                  style={{
+                    fontSize: '11px',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    background: 'rgba(0, 255, 157, 0.06)',
+                    border: '1px solid rgba(0, 255, 157, 0.25)',
+                    color: 'var(--text-accent)',
+                    fontWeight: 600,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div
             className="mono-tag"
             style={{

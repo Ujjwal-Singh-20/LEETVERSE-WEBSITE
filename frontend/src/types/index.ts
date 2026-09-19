@@ -5,6 +5,7 @@ export interface PublicMember {
   username: string;
   status: MemberStatus;
   position: string;
+  domains?: string[];
   bio?: string;
   photoUrl?: string | null;
   instagram?: string | null;

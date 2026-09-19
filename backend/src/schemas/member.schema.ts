@@ -14,6 +14,8 @@ export const createMemberSchema = z.object({
     errorMap: () => ({ message: "Status must be either 'active' or 'alumni'" }),
   }),
   position: z.string().trim().min(1, 'Position is required'),
+  domain: z.string().trim().optional(),
+  domains: z.array(z.string().trim()).optional().default([]),
   bio: z.string().trim().default(''),
   photoUrl: z.string().url('Invalid photo URL').optional().nullable(),
   instagram: z.string().url('Invalid Instagram URL').optional().nullable(),
@@ -33,17 +35,21 @@ export const updateMemberFieldSchema = z.object({
     'linkedin',
     'github',
     'rollNo',
+    'domains',
   ]),
-  value: z.union([z.string(), z.null()]),
+  value: z.union([z.string(), z.array(z.string()), z.null()]),
 }).refine(
   (data) => {
+    if (data.field === 'domains') {
+      return Array.isArray(data.value);
+    }
     if (data.field === 'status') {
       return data.value === 'active' || data.value === 'alumni';
     }
     if (['photoUrl', 'instagram', 'linkedin', 'github'].includes(data.field)) {
       if (data.value === null || data.value === '') return true;
       try {
-        new URL(data.value);
+        new URL(data.value as string);
         return true;
       } catch {
         return false;

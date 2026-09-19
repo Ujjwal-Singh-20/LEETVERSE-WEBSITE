@@ -58,7 +58,8 @@ export const AdminMembers: React.FC = () => {
   // Modal State for adding a member
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<RoleLevel>('MEMBER');
-  const [addFormDomain, setAddFormDomain] = useState<string>('ai-ml');
+  const [addFormDomains, setAddFormDomains] = useState<string[]>(['ai-ml']);
+  const [customDomainList, setCustomDomainList] = useState<string[]>([]);
   const [newDomainInput, setNewDomainInput] = useState<string>('');
   const [addForm, setAddForm] = useState({
     name: '',
@@ -73,7 +74,7 @@ export const AdminMembers: React.FC = () => {
     github: '',
   });
 
-  // Dynamically combine preset domains with any existing domains in the database
+  // Dynamically combine preset domains with any existing domains in the database and custom additions
   const availableDomains = useMemo(() => {
     const map = new Map<string, string>();
     PRESET_DOMAINS.forEach((d) => map.set(d.slug, d.label));
@@ -82,21 +83,27 @@ export const AdminMembers: React.FC = () => {
         map.set(t.slug, t.name.toUpperCase());
       }
     });
+    customDomainList.forEach((c) => {
+      if (!map.has(c)) {
+        map.set(c, c.toUpperCase());
+      }
+    });
     return Array.from(map.entries()).map(([slug, label]) => ({ slug, label }));
-  }, [tree]);
+  }, [tree, customDomainList]);
 
   const handleRoleChange = (role: RoleLevel) => {
     setSelectedRole(role);
-    let targetDomain = addFormDomain;
+    let targetDomains = addFormDomains;
     if (isExecutiveRole(role)) {
-      targetDomain = 'executive';
-      setAddFormDomain('executive');
-    } else if (addFormDomain === 'executive') {
-      targetDomain = 'ai-ml';
-      setAddFormDomain('ai-ml');
+      targetDomains = ['executive'];
+      setAddFormDomains(['executive']);
+    } else if (addFormDomains.includes('executive')) {
+      targetDomains = ['ai-ml'];
+      setAddFormDomains(['ai-ml']);
     }
 
-    const domainLabel = availableDomains.find((d) => d.slug === targetDomain)?.label || 'DOMAIN';
+    const firstDomain = targetDomains[0] || 'ai-ml';
+    const domainLabel = availableDomains.find((d) => d.slug === firstDomain)?.label || 'DOMAIN';
 
     if (role === 'PRESIDENT') {
       setAddForm((prev) => ({ ...prev, position: 'President' }));
@@ -115,23 +122,27 @@ export const AdminMembers: React.FC = () => {
     }
   };
 
-  const handleDomainChange = (slug: string) => {
-    setAddFormDomain(slug);
-    if (slug === 'NEW_DOMAIN') {
-      const label = newDomainInput.trim().toUpperCase() || 'DOMAIN';
-      if (selectedRole === 'LEAD') {
-        setAddForm((prev) => ({ ...prev, position: `${label} Lead` }));
-      } else if (selectedRole === 'ASST LEAD') {
-        setAddForm((prev) => ({ ...prev, position: `Asst. ${label} Lead` }));
+  const toggleAddFormDomain = (slug: string) => {
+    setAddFormDomains((prev) => {
+      if (prev.includes(slug)) {
+        if (prev.length <= 1) return prev; // Keep at least one domain
+        return prev.filter((d) => d !== slug);
+      } else {
+        return [...prev, slug];
       }
-      return;
+    });
+  };
+
+  const handleAddCustomDomain = () => {
+    const slug = newDomainInput.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    if (!slug) return;
+    if (!customDomainList.includes(slug)) {
+      setCustomDomainList((prev) => [...prev, slug]);
     }
-    const domainLabel = availableDomains.find((d) => d.slug === slug)?.label || slug.toUpperCase();
-    if (selectedRole === 'LEAD') {
-      setAddForm((prev) => ({ ...prev, position: `${domainLabel} Lead` }));
-    } else if (selectedRole === 'ASST LEAD') {
-      setAddForm((prev) => ({ ...prev, position: `Asst. ${domainLabel} Lead` }));
+    if (!addFormDomains.includes(slug)) {
+      setAddFormDomains((prev) => [...prev, slug]);
     }
+    setNewDomainInput('');
   };
 
   // Username validation state
@@ -216,17 +227,12 @@ export const AdminMembers: React.FC = () => {
   const handleCreateMemberSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let finalDomain = '';
-    if (isExecutiveRole(selectedRole)) {
-      finalDomain = 'executive';
-    } else if (addFormDomain === 'NEW_DOMAIN') {
-      finalDomain = newDomainInput.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    } else {
-      finalDomain = addFormDomain;
-    }
+    const isExec = isExecutiveRole(selectedRole);
+    const finalDomains = isExec ? ['executive'] : (addFormDomains.length > 0 ? addFormDomains : ['ai-ml']);
+    const primaryDomain = finalDomains[0];
 
-    if (!finalDomain) {
-      alert('Please select or specify a domain.');
+    if (!primaryDomain) {
+      alert('Please select or specify at least one domain.');
       return;
     }
 
@@ -243,7 +249,8 @@ export const AdminMembers: React.FC = () => {
 
     try {
       await createAdminMember({
-        domain: finalDomain,
+        domain: primaryDomain,
+        domains: finalDomains,
         name: addForm.name,
         username: addForm.username,
         position: finalPosition,
@@ -271,7 +278,7 @@ export const AdminMembers: React.FC = () => {
         github: '',
       });
       setSelectedRole('MEMBER');
-      setAddFormDomain('ai-ml');
+      setAddFormDomains(['ai-ml']);
       setNewDomainInput('');
       setUsernameCheck({ checking: false, available: null, message: '' });
       await loadTree();
@@ -281,7 +288,7 @@ export const AdminMembers: React.FC = () => {
   };
 
   // Autosave on blur for active editing member
-  const handleFieldBlur = async (field: string, value: string | null) => {
+  const handleFieldBlur = async (field: string, value: any) => {
     if (!activeEditingMember) return;
     setAutosaveStatus('Saving...');
     try {
@@ -346,7 +353,7 @@ export const AdminMembers: React.FC = () => {
         <button
           onClick={() => {
             setSelectedRole('MEMBER');
-            setAddFormDomain('ai-ml');
+            setAddFormDomains(['ai-ml']);
             setNewDomainInput('');
             setAddForm({
               name: '',
@@ -504,6 +511,27 @@ export const AdminMembers: React.FC = () => {
                                       <div style={{ fontSize: '0.75rem', color: '#7a9e8b' }}>
                                         {member.position} &bull; <span style={{ fontFamily: 'var(--font-mono)' }}>@{member.username}</span>
                                       </div>
+                                      {member.domains && member.domains.length > 1 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '3px' }}>
+                                          {member.domains.map((d) => (
+                                            <span
+                                              key={d}
+                                              style={{
+                                                fontSize: '0.65rem',
+                                                padding: '1px 5px',
+                                                borderRadius: '3px',
+                                                background: 'rgba(0, 255, 157, 0.08)',
+                                                border: '1px solid rgba(0, 255, 157, 0.25)',
+                                                color: '#3dffa0',
+                                                fontFamily: 'var(--font-mono)',
+                                                textTransform: 'uppercase',
+                                              }}
+                                            >
+                                              {d}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
 
@@ -752,6 +780,75 @@ export const AdminMembers: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Assigned Domains (For non-executive members) */}
+                {activeEditingMember.domain !== 'executive' && (
+                  <div
+                    style={{
+                      padding: '12px',
+                      backgroundColor: '#07120c',
+                      borderRadius: '6px',
+                      border: '1px solid #163324',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <label style={{ fontSize: '0.8rem', color: '#7a9e8b' }}>
+                        Assigned Domains (Can belong to multiple)
+                      </label>
+                      <span style={{ fontSize: '0.72rem', color: '#567564' }}>
+                        Auto-saves
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {availableDomains.map((d) => {
+                        const currentDomains =
+                          activeEditingMember.domains && activeEditingMember.domains.length > 0
+                            ? activeEditingMember.domains
+                            : [activeEditingMember.domain];
+                        const isAssigned = currentDomains.includes(d.slug);
+
+                        return (
+                          <button
+                            key={d.slug}
+                            type="button"
+                            onClick={async () => {
+                              let nextDomains: string[];
+                              if (isAssigned) {
+                                if (currentDomains.length <= 1) {
+                                  alert('A member must belong to at least one domain.');
+                                  return;
+                                }
+                                nextDomains = currentDomains.filter((s) => s !== d.slug);
+                              } else {
+                                nextDomains = [...currentDomains, d.slug];
+                              }
+                              setActiveEditingMember((prev) => (prev ? { ...prev, domains: nextDomains } : null));
+                              await handleFieldBlur('domains', nextDomains);
+                            }}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              padding: '5px 10px',
+                              borderRadius: '5px',
+                              fontSize: '0.78rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                              backgroundColor: isAssigned ? 'rgba(0, 255, 157, 0.12)' : 'transparent',
+                              border: isAssigned ? '1px solid #00ff9d' : '1px solid #1c4a31',
+                              color: isAssigned ? '#00ff9d' : '#5f806e',
+                            }}
+                          >
+                            {isAssigned && <Check size={12} />}
+                            {d.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Roll No (Admin only) */}
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>
@@ -944,60 +1041,79 @@ export const AdminMembers: React.FC = () => {
                 </div>
               ) : (
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#3dffa0', marginBottom: '6px' }}>
-                    Domain *
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#3dffa0', marginBottom: '8px' }}>
+                    Assigned Domains (Select one or more) *
                   </label>
-                  <select
-                    value={addFormDomain}
-                    onChange={(e) => handleDomainChange(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      backgroundColor: '#07120c',
-                      border: '1px solid #1c4a31',
-                      borderRadius: '6px',
-                      color: '#f0f7f3',
-                      fontSize: '0.9rem',
-                      outline: 'none',
-                    }}
-                  >
-                    {availableDomains.map((d) => (
-                      <option key={d.slug} value={d.slug}>
-                        {d.label}
-                      </option>
-                    ))}
-                    <option value="NEW_DOMAIN">+ Add New Domain...</option>
-                  </select>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                    {availableDomains.map((d) => {
+                      const isSelected = addFormDomains.includes(d.slug);
+                      return (
+                        <button
+                          key={d.slug}
+                          type="button"
+                          onClick={() => toggleAddFormDomain(d.slug)}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '0.82rem',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            backgroundColor: isSelected ? 'rgba(0, 255, 157, 0.15)' : '#07120c',
+                            border: isSelected ? '1px solid #00ff9d' : '1px solid #163324',
+                            color: isSelected ? '#00ff9d' : '#7a9e8b',
+                          }}
+                        >
+                          {isSelected && <Check size={13} />}
+                          {d.label}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-                  {addFormDomain === 'NEW_DOMAIN' && (
-                    <div style={{ marginTop: '8px' }}>
-                      <input
-                        type="text"
-                        placeholder="Enter new domain name (e.g. CYBERSECURITY, BLOCKCHAIN)"
-                        value={newDomainInput}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setNewDomainInput(val);
-                          const domainLabel = val.trim().toUpperCase() || 'DOMAIN';
-                          if (selectedRole === 'LEAD') {
-                            setAddForm((prev) => ({ ...prev, position: `${domainLabel} Lead` }));
-                          } else if (selectedRole === 'ASST LEAD') {
-                            setAddForm((prev) => ({ ...prev, position: `Asst. ${domainLabel} Lead` }));
-                          }
-                        }}
-                        required
-                        style={{
-                          width: '100%',
-                          padding: '8px 12px',
-                          backgroundColor: '#07120c',
-                          border: '1px solid #00ff9d',
-                          borderRadius: '6px',
-                          color: '#f0f7f3',
-                          fontSize: '0.875rem',
-                        }}
-                      />
-                    </div>
-                  )}
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder="Add custom domain (e.g. CYBERSECURITY)..."
+                      value={newDomainInput}
+                      onChange={(e) => setNewDomainInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomDomain();
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '7px 12px',
+                        backgroundColor: '#07120c',
+                        border: '1px solid #1c4a31',
+                        borderRadius: '6px',
+                        color: '#f0f7f3',
+                        fontSize: '0.82rem',
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddCustomDomain}
+                      style={{
+                        padding: '7px 14px',
+                        borderRadius: '6px',
+                        backgroundColor: '#11291c',
+                        border: '1px solid #1c4a31',
+                        color: '#3dffa0',
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      + Add
+                    </button>
+                  </div>
                 </div>
               )}
 

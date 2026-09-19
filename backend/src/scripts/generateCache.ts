@@ -24,41 +24,14 @@ function formatTimestamp(timestamp: any): string {
   return new Date().toISOString();
 }
 
+import { memberService } from '../services/member.service';
+
 export async function generateMembersListing(): Promise<MembersListingBlob> {
-  const domainsSnap = await db.collection(COLLECTIONS.MEMBERS).listDocuments();
-
-  const domains = await Promise.all(
-    domainsSnap.map(async (domainDoc) => {
-      const membersSnap = await domainDoc
-        .collection(COLLECTIONS.MEMBERS_LISTED)
-        .where('status', '==', 'active')
-        .get();
-
-      const members = membersSnap.docs.map((doc) => {
-        const data = doc.data() as MemberDoc;
-        return {
-          username: data.username,
-          name: data.name,
-          position: data.position,
-          photoUrl: data.photoUrl || null,
-          status: 'active' as const,
-        };
-      });
-
-      return {
-        slug: domainDoc.id,
-        name: domainDoc.id
-          .split('-')
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(' '),
-        members,
-      };
-    })
-  );
+  const domains = await memberService.getActiveMembersByDomain();
 
   return {
     generatedAt: new Date().toISOString(),
-    domains: domains.filter((d) => d.members.length > 0),
+    domains,
   };
 }
 

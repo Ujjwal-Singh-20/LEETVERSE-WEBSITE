@@ -8,6 +8,8 @@ export interface MemberDoc {
   username: string;
   status: MemberStatus;
   position: string;
+  domain?: string;
+  domains?: string[];
   bio?: string;
   photoUrl?: string | null;
   instagram?: string | null;
@@ -23,6 +25,7 @@ export interface PublicMember {
   username: string;
   status: MemberStatus;
   position: string;
+  domains?: string[];
   bio: string;
   photoUrl: string | null;
   instagram: string | null;
@@ -33,6 +36,7 @@ export interface PublicMember {
 export interface AdminMember extends Omit<MemberDoc, 'createdAt' | 'updatedAt'> {
   docId: string;
   domain: string;
+  domains?: string[];
   createdAt: string;
   updatedAt: string;
 }

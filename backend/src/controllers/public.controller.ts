@@ -194,9 +194,13 @@ function escapeHtml(str: string): string {
 }
 
 function getFrontendBaseUrl(): string {
-  const allowed = (ENV.FRONTEND_URL || 'https://leetverse-website.vercel.app').split(',');
-  const vercelUrl = allowed.find((u) => u.includes('vercel.app')) || allowed[0] || 'http://localhost:5173';
-  const trimmed = vercelUrl.trim();
+  const allowed = (ENV.FRONTEND_URL || 'https://leetverse.in,https://leetverse-website.vercel.app').split(',');
+  const preferredUrl =
+    allowed.find((u) => u.includes('leetverse.in')) ||
+    allowed.find((u) => u.includes('vercel.app')) ||
+    allowed[0] ||
+    'https://leetverse.in';
+  const trimmed = preferredUrl.trim();
   const valid = trimmed.startsWith('http://') || trimmed.startsWith('https://') ? trimmed : `https://${trimmed}`;
   return valid.replace(/\/+$/, '');
 }

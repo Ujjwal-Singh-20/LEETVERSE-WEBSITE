@@ -18,12 +18,13 @@ const formatTimestamp = (timestamp: any): string => {
  * Strips rollNo and private metadata from member profile for public consumption (/u/:username)
  * Enforces explicit allowlist per specs
  */
-export const serializePublicMember = (data: MemberDoc): PublicMember => {
+export const serializePublicMember = (data: MemberDoc, domain?: string): PublicMember => {
   return {
     name: data.name,
     username: data.username,
     status: data.status,
     position: data.position,
+    domains: data.domains || (domain ? [domain] : []),
     bio: data.bio || '',
     photoUrl: data.photoUrl || null,
     instagram: data.instagram || null,
@@ -43,6 +44,7 @@ export const serializeAdminMember = (
   return {
     docId,
     domain,
+    domains: data.domains || (domain ? [domain] : []),
     name: data.name,
     username: data.username,
     status: data.status,
