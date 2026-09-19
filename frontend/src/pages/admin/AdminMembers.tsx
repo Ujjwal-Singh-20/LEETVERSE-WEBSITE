@@ -53,6 +53,7 @@ export const AdminMembers: React.FC = () => {
   const [expandedDomains, setExpandedDomains] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState<boolean>(true);
   const [activeEditingMember, setActiveEditingMember] = useState<AdminMember | null>(null);
+  const [customPositionMode, setCustomPositionMode] = useState<boolean>(false);
 
   // Modal State for adding a member
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
@@ -461,7 +462,10 @@ export const AdminMembers: React.FC = () => {
                               return (
                                 <div
                                   key={member.docId}
-                                  onClick={() => setActiveEditingMember(member)}
+                                  onClick={() => {
+                                    setActiveEditingMember(member);
+                                    setCustomPositionMode(false);
+                                  }}
                                   style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -649,40 +653,82 @@ export const AdminMembers: React.FC = () => {
                 {/* Position & Status Row */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>Position</label>
-                    <select
-                      value={activeEditingMember.position}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        handleFieldBlur('position', val);
-                        setActiveEditingMember({ ...activeEditingMember, position: val });
-                      }}
-                      style={{
-                        width: '100%',
-                        padding: '8px 12px',
-                        backgroundColor: '#07120c',
-                        border: '1px solid #163324',
-                        borderRadius: '6px',
-                        color: '#f0f7f3',
-                        fontSize: '0.9rem',
-                        outline: 'none',
-                      }}
-                    >
-                      {STANDARD_POSITIONS.map((group) => (
-                        <optgroup key={group.category} label={group.category}>
-                          {group.positions.map((pos) => (
-                            <option key={pos} value={pos}>
-                              {pos}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ))}
-                      {!STANDARD_POSITIONS.some((g) => g.positions.includes(activeEditingMember.position)) && (
-                        <option value={activeEditingMember.position}>
-                          {activeEditingMember.position} (Custom)
-                        </option>
-                      )}
-                    </select>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <label style={{ fontSize: '0.8rem', color: '#7a9e8b' }}>Position</label>
+                      <button
+                        type="button"
+                        onClick={() => setCustomPositionMode(!customPositionMode)}
+                        style={{
+                          fontSize: '0.72rem',
+                          color: '#3dffa0',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                        }}
+                      >
+                        {customPositionMode ? 'Preset List' : 'Type Custom'}
+                      </button>
+                    </div>
+
+                    {customPositionMode ? (
+                      <input
+                        type="text"
+                        value={activeEditingMember.position}
+                        onChange={(e) => setActiveEditingMember({ ...activeEditingMember, position: e.target.value })}
+                        onBlur={(e) => handleFieldBlur('position', e.target.value)}
+                        placeholder="e.g. Lead Researcher"
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          backgroundColor: '#07120c',
+                          border: '1px solid #163324',
+                          borderRadius: '6px',
+                          color: '#f0f7f3',
+                          fontSize: '0.9rem',
+                          outline: 'none',
+                        }}
+                      />
+                    ) : (
+                      <select
+                        value={activeEditingMember.position}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '__custom__') {
+                            setCustomPositionMode(true);
+                            return;
+                          }
+                          handleFieldBlur('position', val);
+                          setActiveEditingMember({ ...activeEditingMember, position: val });
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          backgroundColor: '#07120c',
+                          border: '1px solid #163324',
+                          borderRadius: '6px',
+                          color: '#f0f7f3',
+                          fontSize: '0.9rem',
+                          outline: 'none',
+                        }}
+                      >
+                        {STANDARD_POSITIONS.map((group) => (
+                          <optgroup key={group.category} label={group.category}>
+                            {group.positions.map((pos) => (
+                              <option key={pos} value={pos}>
+                                {pos}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                        {!STANDARD_POSITIONS.some((g) => g.positions.includes(activeEditingMember.position)) && (
+                          <option value={activeEditingMember.position}>
+                            {activeEditingMember.position} (Current)
+                          </option>
+                        )}
+                        <option value="__custom__">+ Type Custom Position...</option>
+                      </select>
+                    )}
                   </div>
 
                   <div>

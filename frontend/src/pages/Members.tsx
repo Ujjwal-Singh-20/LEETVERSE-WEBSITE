@@ -17,6 +17,9 @@ import {
   Layers,
   Code2,
   Briefcase,
+  Github,
+  Linkedin,
+  Instagram,
 } from 'lucide-react';
 import { fetchMembers } from '../services/api';
 import { DomainGroup, PublicMember } from '../types';
@@ -63,15 +66,16 @@ const MemberCard: React.FC<{
   isPresident?: boolean;
 }> = ({ member, domainSlug, isPresident = false }) => {
   const tier = (member as HierarchyMember).tier || getMemberTier(member.position, domainSlug);
+  const hasSocials = Boolean(member.github || member.linkedin || member.instagram);
 
   return (
     <Link
       to={`/u/${member.username}`}
       className="glass-panel"
       style={{
-        padding: isPresident ? 'clamp(26px, 3.5vw, 36px)' : '24px',
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
+        alignItems: 'stretch',
         position: 'relative',
         textDecoration: 'none',
         borderRadius: 'var(--radius-lg)',
@@ -80,6 +84,7 @@ const MemberCard: React.FC<{
         transition: 'transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast)',
         backgroundColor: '#0a1711',
         overflow: 'hidden',
+        minHeight: '160px',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
@@ -90,74 +95,95 @@ const MemberCard: React.FC<{
         e.currentTarget.style.boxShadow = `0 14px 34px rgba(0, 0, 0, 0.45), 0 0 22px ${tier.glowColor}`;
       }}
     >
-      {/* Header with Avatar & Details */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '18px', marginBottom: '16px' }}>
-        {/* Avatar with dynamic tier ring & photo */}
-        <div
-          style={{
-            position: 'relative',
-            width: isPresident ? '72px' : '62px',
-            height: isPresident ? '72px' : '62px',
-            flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {/* Ambient soft glow around avatar */}
-          <div
+      {/* Left ~38-40% Photo Column */}
+      <div
+        style={{
+          width: '38%',
+          minWidth: '115px',
+          maxWidth: isPresident ? '180px' : '150px',
+          flexShrink: 0,
+          position: 'relative',
+          overflow: 'hidden',
+          backgroundColor: '#060f0a',
+          borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {member.photoUrl ? (
+          <img
+            src={member.photoUrl}
+            alt={member.name}
             style={{
-              position: 'absolute',
-              inset: '-4px',
-              borderRadius: '50%',
-              background: `radial-gradient(circle, ${tier.glowColor} 0%, transparent 70%)`,
-              filter: 'blur(8px)',
-              pointerEvents: 'none',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              display: 'block',
             }}
           />
-
+        ) : (
           <div
             style={{
               width: '100%',
               height: '100%',
-              borderRadius: '50%',
-              background: member.photoUrl
-                ? `url("${member.photoUrl}") center/cover no-repeat`
-                : 'linear-gradient(135deg, #132a1e 0%, #1e4230 100%)',
-              border: `2px solid ${tier.ringColor}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: isPresident ? '1.7rem' : '1.4rem',
+              background: 'linear-gradient(135deg, #0d2116 0%, #173826 100%)',
+              fontSize: '2.2rem',
               fontWeight: 800,
               color: tier.accentColor,
-              position: 'relative',
-              zIndex: 1,
+              userSelect: 'none',
             }}
           >
-            {!member.photoUrl && member.name[0]}
+            {member.name[0]}
           </div>
-        </div>
+        )}
 
-        {/* Member Name, Position, Badge */}
-        <div style={{ overflow: 'hidden', flex: 1 }}>
+        {/* Ambient Subtle Shading */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(to right, transparent 75%, rgba(10, 23, 17, 0.45) 100%)',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
+
+      {/* Right Column Details */}
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          padding: '16px 18px 14px',
+        }}
+      >
+        {/* Top Info */}
+        <div>
+          {/* Member Name */}
           <div
             style={{
-              fontSize: isPresident ? 'clamp(1.25rem, 1.6vw, 1.45rem)' : 'clamp(1.1rem, 1.3vw, 1.25rem)',
+              fontSize: isPresident ? 'clamp(1.15rem, 1.4vw, 1.35rem)' : 'clamp(1.05rem, 1.2vw, 1.2rem)',
               fontWeight: 700,
               color: 'var(--text-primary)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              marginBottom: '4px',
+              marginBottom: '3px',
             }}
           >
             {member.name}
           </div>
 
+          {/* Member Position */}
           <div
             style={{
-              fontSize: '0.92rem',
+              fontSize: '0.88rem',
               color: tier.accentColor,
               fontWeight: 600,
               whiteSpace: 'nowrap',
@@ -175,76 +201,180 @@ const MemberCard: React.FC<{
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '5px',
-              padding: '2px 8px',
+              gap: '4px',
+              padding: '2px 7px',
               background: tier.bgSubtle,
               color: tier.accentColor,
               border: `1px solid ${tier.borderColor}`,
               borderRadius: '4px',
-              fontSize: '11px',
+              fontSize: '10.5px',
               fontWeight: 700,
               letterSpacing: '0.03em',
+              width: 'fit-content',
             }}
           >
             {isPresident && <Crown size={11} />}
             {tier.badge}
           </span>
+
+          {/* Bio (if available) */}
+          {member.bio && (
+            <p
+              style={{
+                fontSize: '0.84rem',
+                color: 'var(--text-muted)',
+                lineHeight: 1.45,
+                marginTop: '8px',
+                marginBottom: '4px',
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+              }}
+            >
+              {member.bio}
+            </p>
+          )}
         </div>
-      </div>
 
-      {/* Bio (if available) */}
-      {member.bio && (
-        <p
+        {/* Card Footer */}
+        <div
           style={{
-            fontSize: '0.925rem',
-            color: 'var(--text-muted)',
-            lineHeight: 1.55,
-            marginBottom: '18px',
-            display: '-webkit-box',
-            WebkitLineClamp: isPresident ? 3 : 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-            flex: 1,
-          }}
-        >
-          {member.bio}
-        </p>
-      )}
-
-      {/* Card Footer */}
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginTop: 'auto',
-          paddingTop: '12px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-        }}
-      >
-        <span
-          className="mono-tag"
-          style={{
-            color: 'var(--text-dim)',
-            fontSize: '12px',
-            transition: 'color var(--transition-fast)',
-          }}
-        >
-          @{member.username}
-        </span>
-
-        <span
-          style={{
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
-            gap: '5px',
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            color: tier.accentColor,
+            justifyContent: 'space-between',
+            marginTop: '12px',
+            paddingTop: '10px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+            gap: '8px',
           }}
         >
-          Card <ArrowUpRight size={14} />
-        </span>
+          <span
+            className="mono-tag"
+            style={{
+              color: 'var(--text-dim)',
+              fontSize: '11.5px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            @{member.username}
+          </span>
+
+          {/* Social Links on Bottom Right */}
+          {hasSocials && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                flexShrink: 0,
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {member.github && (
+                <a
+                  href={member.github}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="GitHub"
+                  aria-label={`${member.name}'s GitHub`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '26px',
+                    height: '26px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'var(--text-muted)',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = tier.accentColor;
+                    e.currentTarget.style.color = tier.accentColor;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.transform = 'none';
+                  }}
+                >
+                  <Github size={13} />
+                </a>
+              )}
+              {member.linkedin && (
+                <a
+                  href={member.linkedin}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="LinkedIn"
+                  aria-label={`${member.name}'s LinkedIn`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '26px',
+                    height: '26px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'var(--text-muted)',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = tier.accentColor;
+                    e.currentTarget.style.color = tier.accentColor;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.transform = 'none';
+                  }}
+                >
+                  <Linkedin size={13} />
+                </a>
+              )}
+              {member.instagram && (
+                <a
+                  href={member.instagram}
+                  target="_blank"
+                  rel="noreferrer"
+                  title="Instagram"
+                  aria-label={`${member.name}'s Instagram`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '26px',
+                    height: '26px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    color: 'var(--text-muted)',
+                    transition: 'all var(--transition-fast)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = tier.accentColor;
+                    e.currentTarget.style.color = tier.accentColor;
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.transform = 'none';
+                  }}
+                >
+                  <Instagram size={13} />
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </Link>
   );
