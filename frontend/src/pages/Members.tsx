@@ -569,77 +569,116 @@ export const Members: React.FC = () => {
               </div>
             )}
 
-            {/* 3. TECH LEADS TIER (Society Tech Leadership) */}
-            {hierarchy.techLeads.length > 0 && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid rgba(0, 255, 157, 0.15)', paddingBottom: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Code2 size={22} color={TIER_CONFIGS['tech-lead'].accentColor} />
-                    <h2 style={{ fontSize: 'clamp(1.3rem, 2vw, 1.6rem)' }}>Tech Leads</h2>
+            {/* 3 & 4. TECH & NON-TECH LEADS TIER (Side by Side) */}
+            {(hierarchy.techLeads.length > 0 || hierarchy.nonTechLeads.length > 0) && (
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns:
+                    hierarchy.techLeads.length > 0 && hierarchy.nonTechLeads.length > 0
+                      ? 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))'
+                      : '1fr',
+                  gap: 'clamp(28px, 4vw, 44px)',
+                  alignItems: 'start',
+                }}
+              >
+                {/* 3. TECH LEADS TIER (Society Tech Leadership) */}
+                {hierarchy.techLeads.length > 0 && (
+                  <div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '20px',
+                        borderBottom: '1px solid rgba(0, 255, 157, 0.15)',
+                        paddingBottom: '14px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Code2 size={22} color={TIER_CONFIGS['tech-lead'].accentColor} />
+                        <h2 style={{ fontSize: 'clamp(1.2rem, 1.8vw, 1.5rem)' }}>Tech Leads</h2>
+                      </div>
+                      <span
+                        className="mono-tag"
+                        style={{
+                          padding: '4px 10px',
+                          background: TIER_CONFIGS['tech-lead'].bgSubtle,
+                          color: TIER_CONFIGS['tech-lead'].accentColor,
+                          border: `1px solid ${TIER_CONFIGS['tech-lead'].borderColor}`,
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                        }}
+                      >
+                        {hierarchy.techLeads.length} {hierarchy.techLeads.length === 1 ? 'Lead' : 'Leads'}
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns:
+                          hierarchy.techLeads.length > 1
+                            ? 'repeat(auto-fill, minmax(280px, 1fr))'
+                            : '1fr',
+                        gap: '20px',
+                      }}
+                    >
+                      {hierarchy.techLeads.map((lead) => (
+                        <MemberCard key={lead.username} member={lead} domainSlug={lead.domainSlug} />
+                      ))}
+                    </div>
                   </div>
-                  <span
-                    className="mono-tag"
-                    style={{
-                      padding: '4px 10px',
-                      background: TIER_CONFIGS['tech-lead'].bgSubtle,
-                      color: TIER_CONFIGS['tech-lead'].accentColor,
-                      border: `1px solid ${TIER_CONFIGS['tech-lead'].borderColor}`,
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                    }}
-                  >
-                    {hierarchy.techLeads.length} {hierarchy.techLeads.length === 1 ? 'Lead' : 'Leads'}
-                  </span>
-                </div>
+                )}
 
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(280px, 26vw, 340px), 1fr))',
-                    gap: '24px',
-                  }}
-                >
-                  {hierarchy.techLeads.map((lead) => (
-                    <MemberCard key={lead.username} member={lead} domainSlug={lead.domainSlug} />
-                  ))}
-                </div>
-              </div>
-            )}
+                {/* 4. NON-TECH LEADS TIER (Society Non-Tech Leadership) */}
+                {hierarchy.nonTechLeads.length > 0 && (
+                  <div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: '20px',
+                        borderBottom: '1px solid rgba(244, 63, 94, 0.2)',
+                        paddingBottom: '14px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Palette size={22} color={TIER_CONFIGS['non-tech-lead'].accentColor} />
+                        <h2 style={{ fontSize: 'clamp(1.2rem, 1.8vw, 1.5rem)' }}>Non-Tech Leads</h2>
+                      </div>
+                      <span
+                        className="mono-tag"
+                        style={{
+                          padding: '4px 10px',
+                          background: TIER_CONFIGS['non-tech-lead'].bgSubtle,
+                          color: TIER_CONFIGS['non-tech-lead'].accentColor,
+                          border: `1px solid ${TIER_CONFIGS['non-tech-lead'].borderColor}`,
+                          borderRadius: '6px',
+                          fontSize: '12px',
+                        }}
+                      >
+                        {hierarchy.nonTechLeads.length} {hierarchy.nonTechLeads.length === 1 ? 'Lead' : 'Leads'}
+                      </span>
+                    </div>
 
-            {/* 4. NON-TECH LEADS TIER (Society Non-Tech Leadership) */}
-            {hierarchy.nonTechLeads.length > 0 && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', borderBottom: '1px solid rgba(244, 63, 94, 0.2)', paddingBottom: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <Palette size={22} color={TIER_CONFIGS['non-tech-lead'].accentColor} />
-                    <h2 style={{ fontSize: 'clamp(1.3rem, 2vw, 1.6rem)' }}>Non-Tech Leads</h2>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns:
+                          hierarchy.nonTechLeads.length > 1
+                            ? 'repeat(auto-fill, minmax(280px, 1fr))'
+                            : '1fr',
+                        gap: '20px',
+                      }}
+                    >
+                      {hierarchy.nonTechLeads.map((lead) => (
+                        <MemberCard key={lead.username} member={lead} domainSlug={lead.domainSlug} />
+                      ))}
+                    </div>
                   </div>
-                  <span
-                    className="mono-tag"
-                    style={{
-                      padding: '4px 10px',
-                      background: TIER_CONFIGS['non-tech-lead'].bgSubtle,
-                      color: TIER_CONFIGS['non-tech-lead'].accentColor,
-                      border: `1px solid ${TIER_CONFIGS['non-tech-lead'].borderColor}`,
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                    }}
-                  >
-                    {hierarchy.nonTechLeads.length} {hierarchy.nonTechLeads.length === 1 ? 'Lead' : 'Leads'}
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(280px, 26vw, 340px), 1fr))',
-                    gap: '24px',
-                  }}
-                >
-                  {hierarchy.nonTechLeads.map((lead) => (
-                    <MemberCard key={lead.username} member={lead} domainSlug={lead.domainSlug} />
-                  ))}
-                </div>
+                )}
               </div>
             )}
 
