@@ -72,7 +72,7 @@ export const Home: React.FC = () => {
           </div>
 
           {/* One Short Tagline - High Legibility */}
-          <p
+          {/* <p
             className="lead-tagline"
             style={{
               maxWidth: '680px',
@@ -80,7 +80,7 @@ export const Home: React.FC = () => {
             }}
           >
             Algorithmic problem solving and technical systems.
-          </p>
+          </p> */}
 
           {/* Two CTAs */}
           <div

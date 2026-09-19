@@ -28,6 +28,7 @@ export interface Project {
   slug: string;
   title: string;
   description: string;
+  link?: string;
   images: string[];
   thumbnail?: string;
   members: ProjectMemberSnapshot[];
@@ -49,14 +50,15 @@ export interface GalleryDetail extends GalleryListingItem {
   updatedAt?: string;
 }
 
-export type ReminderTargetSection = 'hero' | 'members' | 'projects' | 'gallery' | 'global';
+export type ReminderTargetSection = 'hero' | 'home' | 'members' | 'projects' | 'gallery' | 'global';
 
 export interface Reminder {
   docId: string;
   text: string;
   startAt: string;
   endAt: string;
-  targetSection: ReminderTargetSection;
+  targetSection?: ReminderTargetSection | string;
+  section?: string;
 }
 
 export interface AdminMember extends PublicMember {

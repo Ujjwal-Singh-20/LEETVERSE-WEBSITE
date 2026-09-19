@@ -38,6 +38,7 @@ export class ProjectService {
       slug: data.slug,
       title: data.title,
       description: data.description,
+      link: data.link || '',
       images: data.images || [],
       members: data.members || [],
       createdAt: now,

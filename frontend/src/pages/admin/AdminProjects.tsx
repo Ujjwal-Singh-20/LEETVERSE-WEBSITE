@@ -29,6 +29,7 @@ export const AdminProjects: React.FC = () => {
   const [formSlug, setFormSlug] = useState<string>('');
   const [formTitle, setFormTitle] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>('');
+  const [formLink, setFormLink] = useState<string>('');
   const [formImages, setFormImages] = useState<string[]>([]);
   const [formSelectedMembers, setFormSelectedMembers] = useState<ProjectMemberSnapshot[]>([]);
   const [uploading, setUploading] = useState<boolean>(false);
@@ -69,6 +70,7 @@ export const AdminProjects: React.FC = () => {
     setFormSlug('');
     setFormTitle('');
     setFormDescription('');
+    setFormLink('');
     setFormImages([]);
     setFormSelectedMembers([]);
     setIsModalOpen(true);
@@ -79,6 +81,7 @@ export const AdminProjects: React.FC = () => {
     setFormSlug(proj.slug);
     setFormTitle(proj.title);
     setFormDescription(proj.description);
+    setFormLink(proj.link || '');
     setFormImages(proj.images || []);
     setFormSelectedMembers(proj.members || []);
     setIsModalOpen(true);
@@ -118,6 +121,7 @@ export const AdminProjects: React.FC = () => {
         await updateAdminProject(editingProject.slug, {
           title: formTitle,
           description: formDescription,
+          link: formLink.trim(),
           images: formImages,
           members: formSelectedMembers,
         });
@@ -126,6 +130,7 @@ export const AdminProjects: React.FC = () => {
           slug: formSlug.toLowerCase().trim().replace(/\s+/g, '-'),
           title: formTitle,
           description: formDescription,
+          link: formLink.trim(),
           images: formImages,
           members: formSelectedMembers,
         });
@@ -213,7 +218,20 @@ export const AdminProjects: React.FC = () => {
                 projects.map((p) => (
                   <tr key={p.slug} style={{ borderBottom: '1px solid #0f2419' }}>
                     <td style={{ padding: '14px 16px', color: '#f0f7f3', fontWeight: 600 }}>
-                      {p.title}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span>{p.title}</span>
+                        {p.link && (
+                          <a
+                            href={p.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={p.link}
+                            style={{ color: '#00ff9d', display: 'inline-flex', alignItems: 'center' }}
+                          >
+                            <ExternalLink size={13} />
+                          </a>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: '14px 16px', color: '#7a9e8b', fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
                       {p.slug}
@@ -355,6 +373,27 @@ export const AdminProjects: React.FC = () => {
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Full project description and architecture notes..."
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    backgroundColor: '#07120c',
+                    border: '1px solid #163324',
+                    borderRadius: '6px',
+                    color: '#f0f7f3',
+                  }}
+                />
+              </div>
+
+              {/* Project Link / Live Demo */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>
+                  Project Link / Live Demo (URL opens in new page)
+                </label>
+                <input
+                  type="url"
+                  value={formLink}
+                  onChange={(e) => setFormLink(e.target.value)}
+                  placeholder="https://github.com/leetverse/project or https://live-demo.com"
                   style={{
                     width: '100%',
                     padding: '8px 12px',

@@ -16,6 +16,7 @@ export const createProjectSchema = z.object({
     .regex(slugRegex, 'Slug must be lowercase alphanumeric with hyphens (e.g. campus-connect)'),
   title: z.string().trim().min(1, 'Title is required'),
   description: z.string().trim().min(1, 'Description is required'),
+  link: z.string().trim().url('Invalid project URL').or(z.literal('')).optional().nullable(),
   images: z.array(z.string().url('Invalid image URL')).default([]),
   members: z.array(projectMemberSnapshotSchema).default([]),
 });

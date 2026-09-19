@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -9,6 +9,8 @@ import {
   AlertCircle,
   ExternalLink,
   Search,
+  Crown,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   fetchAdminMemberTree,
@@ -19,6 +21,32 @@ import {
   uploadSingleFile,
 } from '../../services/api';
 import { DomainTreeNode, AdminMember } from '../../types';
+import { STANDARD_POSITIONS } from '../../utils/memberTiers';
+
+export const PRESET_DOMAINS = [
+  { slug: 'ai-ml', label: 'AI/ML' },
+  { slug: 'web-dev', label: 'WEB-DEV' },
+  { slug: 'app-dev', label: 'APP-DEV' },
+  { slug: 'design', label: 'DESIGN' },
+  { slug: 'marketing', label: 'MARKETING' },
+  { slug: 'cp-dsa', label: 'CP' },
+  { slug: 'cloud-devops', label: 'CLOUD' },
+];
+
+export type RoleLevel =
+  | 'PRESIDENT'
+  | 'VICE PRESIDENT'
+  | 'TECH LEAD'
+  | 'NON-TECH LEAD'
+  | 'LEAD'
+  | 'ASST LEAD'
+  | 'MEMBER';
+
+export const isExecutiveRole = (role: RoleLevel) =>
+  role === 'PRESIDENT' ||
+  role === 'VICE PRESIDENT' ||
+  role === 'TECH LEAD' ||
+  role === 'NON-TECH LEAD';
 
 export const AdminMembers: React.FC = () => {
   const [tree, setTree] = useState<DomainTreeNode[]>([]);
@@ -28,12 +56,13 @@ export const AdminMembers: React.FC = () => {
 
   // Modal State for adding a member
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
-  const [addFormDomain, setAddFormDomain] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<RoleLevel>('MEMBER');
+  const [addFormDomain, setAddFormDomain] = useState<string>('ai-ml');
   const [newDomainInput, setNewDomainInput] = useState<string>('');
   const [addForm, setAddForm] = useState({
     name: '',
     username: '',
-    position: '',
+    position: 'Core Member',
     status: 'active' as 'active' | 'alumni',
     bio: '',
     rollNo: '',
@@ -42,6 +71,67 @@ export const AdminMembers: React.FC = () => {
     linkedin: '',
     github: '',
   });
+
+  // Dynamically combine preset domains with any existing domains in the database
+  const availableDomains = useMemo(() => {
+    const map = new Map<string, string>();
+    PRESET_DOMAINS.forEach((d) => map.set(d.slug, d.label));
+    tree.forEach((t) => {
+      if (t.slug !== 'executive' && !map.has(t.slug)) {
+        map.set(t.slug, t.name.toUpperCase());
+      }
+    });
+    return Array.from(map.entries()).map(([slug, label]) => ({ slug, label }));
+  }, [tree]);
+
+  const handleRoleChange = (role: RoleLevel) => {
+    setSelectedRole(role);
+    let targetDomain = addFormDomain;
+    if (isExecutiveRole(role)) {
+      targetDomain = 'executive';
+      setAddFormDomain('executive');
+    } else if (addFormDomain === 'executive') {
+      targetDomain = 'ai-ml';
+      setAddFormDomain('ai-ml');
+    }
+
+    const domainLabel = availableDomains.find((d) => d.slug === targetDomain)?.label || 'DOMAIN';
+
+    if (role === 'PRESIDENT') {
+      setAddForm((prev) => ({ ...prev, position: 'President' }));
+    } else if (role === 'VICE PRESIDENT') {
+      setAddForm((prev) => ({ ...prev, position: 'Vice President' }));
+    } else if (role === 'TECH LEAD') {
+      setAddForm((prev) => ({ ...prev, position: 'Tech Lead' }));
+    } else if (role === 'NON-TECH LEAD') {
+      setAddForm((prev) => ({ ...prev, position: 'Non-Tech Lead' }));
+    } else if (role === 'LEAD') {
+      setAddForm((prev) => ({ ...prev, position: `${domainLabel} Lead` }));
+    } else if (role === 'ASST LEAD') {
+      setAddForm((prev) => ({ ...prev, position: `Asst. ${domainLabel} Lead` }));
+    } else {
+      setAddForm((prev) => ({ ...prev, position: 'Core Member' }));
+    }
+  };
+
+  const handleDomainChange = (slug: string) => {
+    setAddFormDomain(slug);
+    if (slug === 'NEW_DOMAIN') {
+      const label = newDomainInput.trim().toUpperCase() || 'DOMAIN';
+      if (selectedRole === 'LEAD') {
+        setAddForm((prev) => ({ ...prev, position: `${label} Lead` }));
+      } else if (selectedRole === 'ASST LEAD') {
+        setAddForm((prev) => ({ ...prev, position: `Asst. ${label} Lead` }));
+      }
+      return;
+    }
+    const domainLabel = availableDomains.find((d) => d.slug === slug)?.label || slug.toUpperCase();
+    if (selectedRole === 'LEAD') {
+      setAddForm((prev) => ({ ...prev, position: `${domainLabel} Lead` }));
+    } else if (selectedRole === 'ASST LEAD') {
+      setAddForm((prev) => ({ ...prev, position: `Asst. ${domainLabel} Lead` }));
+    }
+  };
 
   // Username validation state
   const [usernameCheck, setUsernameCheck] = useState<{
@@ -124,7 +214,15 @@ export const AdminMembers: React.FC = () => {
   // Submit new member
   const handleCreateMemberSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalDomain = addFormDomain === 'NEW_DOMAIN' ? newDomainInput.trim().toLowerCase().replace(/\s+/g, '-') : addFormDomain;
+
+    let finalDomain = '';
+    if (isExecutiveRole(selectedRole)) {
+      finalDomain = 'executive';
+    } else if (addFormDomain === 'NEW_DOMAIN') {
+      finalDomain = newDomainInput.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    } else {
+      finalDomain = addFormDomain;
+    }
 
     if (!finalDomain) {
       alert('Please select or specify a domain.');
@@ -136,12 +234,18 @@ export const AdminMembers: React.FC = () => {
       return;
     }
 
+    const finalPosition = addForm.position.trim();
+    if (!finalPosition) {
+      alert('Please enter a position/title.');
+      return;
+    }
+
     try {
       await createAdminMember({
         domain: finalDomain,
         name: addForm.name,
         username: addForm.username,
-        position: addForm.position,
+        position: finalPosition,
         status: addForm.status,
         bio: addForm.bio || '',
         rollNo: addForm.rollNo,
@@ -156,7 +260,7 @@ export const AdminMembers: React.FC = () => {
       setAddForm({
         name: '',
         username: '',
-        position: '',
+        position: 'Core Member',
         status: 'active',
         bio: '',
         rollNo: '',
@@ -165,6 +269,9 @@ export const AdminMembers: React.FC = () => {
         linkedin: '',
         github: '',
       });
+      setSelectedRole('MEMBER');
+      setAddFormDomain('ai-ml');
+      setNewDomainInput('');
       setUsernameCheck({ checking: false, available: null, message: '' });
       await loadTree();
     } catch (err: any) {
@@ -237,7 +344,22 @@ export const AdminMembers: React.FC = () => {
 
         <button
           onClick={() => {
-            setAddFormDomain(tree[0]?.slug || 'web-dev');
+            setSelectedRole('MEMBER');
+            setAddFormDomain('ai-ml');
+            setNewDomainInput('');
+            setAddForm({
+              name: '',
+              username: '',
+              position: 'Core Member',
+              status: 'active',
+              bio: '',
+              rollNo: '',
+              photoUrl: '',
+              instagram: '',
+              linkedin: '',
+              github: '',
+            });
+            setUsernameCheck({ checking: false, available: null, message: '' });
             setIsAddModalOpen(true);
           }}
           style={{
@@ -528,10 +650,13 @@ export const AdminMembers: React.FC = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>Position</label>
-                    <input
-                      type="text"
-                      defaultValue={activeEditingMember.position}
-                      onBlur={(e) => handleFieldBlur('position', e.target.value)}
+                    <select
+                      value={activeEditingMember.position}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        handleFieldBlur('position', val);
+                        setActiveEditingMember({ ...activeEditingMember, position: val });
+                      }}
                       style={{
                         width: '100%',
                         padding: '8px 12px',
@@ -540,8 +665,24 @@ export const AdminMembers: React.FC = () => {
                         borderRadius: '6px',
                         color: '#f0f7f3',
                         fontSize: '0.9rem',
+                        outline: 'none',
                       }}
-                    />
+                    >
+                      {STANDARD_POSITIONS.map((group) => (
+                        <optgroup key={group.category} label={group.category}>
+                          {group.positions.map((pos) => (
+                            <option key={pos} value={pos}>
+                              {pos}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                      {!STANDARD_POSITIONS.some((g) => g.positions.includes(activeEditingMember.position)) && (
+                        <option value={activeEditingMember.position}>
+                          {activeEditingMember.position} (Custom)
+                        </option>
+                      )}
+                    </select>
                   </div>
 
                   <div>
@@ -705,59 +846,127 @@ export const AdminMembers: React.FC = () => {
             </h2>
 
             <form onSubmit={handleCreateMemberSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Domain Select */}
+              {/* Step 1: Position / Role */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>Domain</label>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#3dffa0', marginBottom: '6px' }}>
+                  Position / Role *
+                </label>
                 <select
-                  value={addFormDomain}
-                  onChange={(e) => setAddFormDomain(e.target.value)}
+                  value={selectedRole}
+                  onChange={(e) => handleRoleChange(e.target.value as RoleLevel)}
                   style={{
                     width: '100%',
-                    padding: '8px 12px',
+                    padding: '10px 12px',
                     backgroundColor: '#07120c',
-                    border: '1px solid #163324',
+                    border: '1px solid #1c4a31',
                     borderRadius: '6px',
                     color: '#f0f7f3',
+                    fontSize: '0.9rem',
+                    outline: 'none',
+                    fontWeight: 600,
                   }}
                 >
-                  {tree.map((d) => (
-                    <option key={d.slug} value={d.slug}>
-                      {d.name} ({d.slug})
-                    </option>
-                  ))}
-                  <option value="NEW_DOMAIN">+ Create New Domain</option>
+                  <option value="PRESIDENT">PRESIDENT</option>
+                  <option value="VICE PRESIDENT">VICE PRESIDENT</option>
+                  <option value="TECH LEAD">TECH LEAD</option>
+                  <option value="NON-TECH LEAD">NON-TECH LEAD</option>
+                  <option value="LEAD">LEAD</option>
+                  <option value="ASST LEAD">ASST LEAD</option>
+                  <option value="MEMBER">MEMBER</option>
                 </select>
-
-                {addFormDomain === 'NEW_DOMAIN' && (
-                  <input
-                    type="text"
-                    placeholder="New domain name (e.g. Mobile Dev)"
-                    value={newDomainInput}
-                    onChange={(e) => setNewDomainInput(e.target.value)}
-                    required
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      backgroundColor: '#07120c',
-                      border: '1px solid #163324',
-                      borderRadius: '6px',
-                      color: '#f0f7f3',
-                      marginTop: '8px',
-                    }}
-                  />
-                )}
               </div>
 
-              {/* Name & Position */}
+              {/* Step 2: Domain Selection (Shown only if not Executive) */}
+              {isExecutiveRole(selectedRole) ? (
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    color: '#fbbf24',
+                    fontSize: '0.82rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <Crown size={16} color="#f59e0b" />
+                  <span>
+                    Executive role selected ({selectedRole}): Domain is automatically assigned as <strong>Executive</strong> (under President & Vice President).
+                  </span>
+                </div>
+              ) : (
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#3dffa0', marginBottom: '6px' }}>
+                    Domain *
+                  </label>
+                  <select
+                    value={addFormDomain}
+                    onChange={(e) => handleDomainChange(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      backgroundColor: '#07120c',
+                      border: '1px solid #1c4a31',
+                      borderRadius: '6px',
+                      color: '#f0f7f3',
+                      fontSize: '0.9rem',
+                      outline: 'none',
+                    }}
+                  >
+                    {availableDomains.map((d) => (
+                      <option key={d.slug} value={d.slug}>
+                        {d.label}
+                      </option>
+                    ))}
+                    <option value="NEW_DOMAIN">+ Add New Domain...</option>
+                  </select>
+
+                  {addFormDomain === 'NEW_DOMAIN' && (
+                    <div style={{ marginTop: '8px' }}>
+                      <input
+                        type="text"
+                        placeholder="Enter new domain name (e.g. CYBERSECURITY, BLOCKCHAIN)"
+                        value={newDomainInput}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setNewDomainInput(val);
+                          const domainLabel = val.trim().toUpperCase() || 'DOMAIN';
+                          if (selectedRole === 'LEAD') {
+                            setAddForm((prev) => ({ ...prev, position: `${domainLabel} Lead` }));
+                          } else if (selectedRole === 'ASST LEAD') {
+                            setAddForm((prev) => ({ ...prev, position: `Asst. ${domainLabel} Lead` }));
+                          }
+                        }}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '8px 12px',
+                          backgroundColor: '#07120c',
+                          border: '1px solid #00ff9d',
+                          borderRadius: '6px',
+                          color: '#f0f7f3',
+                          fontSize: '0.875rem',
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Step 3: Member Name & Designation */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>Name</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>
+                    Full Name *
+                  </label>
                   <input
                     type="text"
                     required
                     value={addForm.name}
                     onChange={(e) => setAddForm({ ...addForm, name: e.target.value })}
-                    placeholder="Aditya Sharma"
+                    placeholder="e.g. Aarav Sharma"
                     style={{
                       width: '100%',
                       padding: '8px 12px',
@@ -770,13 +979,15 @@ export const AdminMembers: React.FC = () => {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>Position</label>
+                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>
+                    Designation / Title *
+                  </label>
                   <input
                     type="text"
                     required
                     value={addForm.position}
                     onChange={(e) => setAddForm({ ...addForm, position: e.target.value })}
-                    placeholder="Lead / Core Member"
+                    placeholder="e.g. AI/ML Lead"
                     style={{
                       width: '100%',
                       padding: '8px 12px',

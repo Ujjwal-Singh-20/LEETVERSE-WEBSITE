@@ -52,6 +52,7 @@ export interface ProjectDoc {
   slug: string;
   title: string;
   description: string;
+  link?: string;
   images: string[];
   thumbnail?: string;
   members: ProjectMemberSnapshot[];
@@ -60,6 +61,7 @@ export interface ProjectDoc {
 }
 
 export interface ProjectResponse extends Omit<ProjectDoc, 'createdAt' | 'updatedAt'> {
+  link?: string;
   thumbnail?: string;
   createdAt: string;
   updatedAt: string;

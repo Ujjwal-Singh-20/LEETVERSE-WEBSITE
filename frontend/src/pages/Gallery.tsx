@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Calendar,
   Maximize2,
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  ArrowLeft,
+  X,
 } from 'lucide-react';
 import { fetchGallery, fetchGalleryImages } from '../services/api';
 import { GalleryListingItem } from '../types';
@@ -304,9 +307,6 @@ export const Gallery: React.FC = () => {
               <span className="mono-tag" style={{ color: 'var(--accent-primary)', fontSize: '13px' }}>
                 ALL ARCHIVED EVENTS ({events.length})
               </span>
-              <span style={{ fontSize: '12px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
-                Click any card to inspect tactile stack
-              </span>
             </div>
 
             <div
@@ -399,76 +399,164 @@ export const Gallery: React.FC = () => {
         )}
       </div>
 
-      {/* Full-Screen Tactile Desk Theater Lightbox Modal */}
-      {lightboxSlug && (
-        <div
-          onClick={closeLightbox}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'radial-gradient(circle at center, #15221b 0%, #08100c 70%, #030605 100%)',
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            userSelect: 'none',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Subtle desk texture overlay */}
+      {/* Full-Screen Tactile Desk Theater Lightbox Modal rendered via Portal directly to body */}
+      {lightboxSlug &&
+        createPortal(
           <div
+            onClick={closeLightbox}
             style={{
-              position: 'absolute',
+              position: 'fixed',
               inset: 0,
-              opacity: 0.04,
-              backgroundImage: `radial-gradient(#ffffff 1px, transparent 1px)`,
-              backgroundSize: '24px 24px',
-              pointerEvents: 'none',
+              background: 'radial-gradient(circle at center, #15221b 0%, #08100c 70%, #030605 100%)',
+              zIndex: 2000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              userSelect: 'none',
+              overflow: 'hidden',
             }}
-          />
-
-          {lightboxLoading ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-muted)', zIndex: 10 }}>
-              <div
-                style={{
-                  width: '46px',
-                  height: '46px',
-                  border: '3px solid rgba(0, 255, 157, 0.2)',
-                  borderTopColor: 'var(--accent-primary)',
-                  borderRadius: '50%',
-                  animation: 'spin 0.8s linear infinite',
-                  margin: '0 auto 16px',
-                }}
-              />
-              <p className="mono-tag" style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
-                Arranging tactile photo deck...
-              </p>
-              <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-            </div>
-          ) : (
+          >
+            {/* Top Bar for Theater Mode */}
             <div
               onClick={(e) => e.stopPropagation()}
               style={{
-                position: 'relative',
-                width: '100vw',
-                height: '100vh',
+                position: 'fixed',
+                top: '24px',
+                left: 'clamp(16px, 3.5vw, 40px)',
+                right: 'clamp(16px, 3.5vw, 40px)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                justifyContent: 'space-between',
+                zIndex: 2100,
+                pointerEvents: 'none',
               }}
             >
-              <TactilePhotoDeck
-                images={lightboxImages}
-                title={lightboxTitle}
-                eventDate={lightboxDate}
-                description={lightboxDesc}
-                isFullScreen={true}
-                onClose={closeLightbox}
-              />
+              {/* High-visibility Back to Gallery Button */}
+              <button
+                onClick={closeLightbox}
+                aria-label="Back to Gallery"
+                style={{
+                  pointerEvents: 'auto',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  background: '#07160e',
+                  border: '2px solid #00ff9d',
+                  color: '#ffffff',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  letterSpacing: '0.5px',
+                  padding: '11px 22px',
+                  borderRadius: '999px',
+                  boxShadow: '0 6px 30px rgba(0, 255, 157, 0.4), 0 2px 10px rgba(0, 0, 0, 0.9)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#00ff9d';
+                  e.currentTarget.style.color = '#06120b';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#07160e';
+                  e.currentTarget.style.color = '#ffffff';
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                <ArrowLeft size={18} strokeWidth={3} />
+                <span>Back to Gallery</span>
+              </button>
+
+              {/* Close Button */}
+              {/* <button
+                onClick={closeLightbox}
+                aria-label="Close theater"
+                style={{
+                  pointerEvents: 'auto',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'rgba(10, 26, 17, 0.92)',
+                  border: '1.5px solid rgba(255, 255, 255, 0.25)',
+                  color: '#ffffff',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  padding: '10px 18px',
+                  borderRadius: '999px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#ff6b6b';
+                  e.currentTarget.style.color = '#ff6b6b';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+              >
+                <span>CLOSE</span>
+                <X size={16} />
+              </button> */}
             </div>
-          )}
-        </div>
-      )}
+
+            {/* Subtle desk texture overlay */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: 0.04,
+                backgroundImage: `radial-gradient(#ffffff 1px, transparent 1px)`,
+                backgroundSize: '24px 24px',
+                pointerEvents: 'none',
+              }}
+            />
+
+            {lightboxLoading ? (
+              <div style={{ textAlign: 'center', color: 'var(--text-muted)', zIndex: 10 }}>
+                <div
+                  style={{
+                    width: '46px',
+                    height: '46px',
+                    border: '3px solid rgba(0, 255, 157, 0.2)',
+                    borderTopColor: 'var(--accent-primary)',
+                    borderRadius: '50%',
+                    animation: 'spin 0.8s linear infinite',
+                    margin: '0 auto 16px',
+                  }}
+                />
+                <p className="mono-tag" style={{ fontSize: '13px', color: 'var(--text-primary)' }}>
+                  Arranging tactile photo deck...
+                </p>
+                <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+              </div>
+            ) : (
+              <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                  position: 'relative',
+                  width: '100vw',
+                  height: '100vh',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <TactilePhotoDeck
+                  images={lightboxImages}
+                  title={lightboxTitle}
+                  eventDate={lightboxDate}
+                  description={lightboxDesc}
+                  isFullScreen={true}
+                  onClose={closeLightbox}
+                />
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

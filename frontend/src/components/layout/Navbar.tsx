@@ -143,7 +143,6 @@ export const Navbar: React.FC = () => {
           style={{
             padding: '8px',
             color: 'var(--text-primary)',
-            display: 'none',
           }}
         >
           {isOpen ? <X size={26} /> : <Menu size={26} />}

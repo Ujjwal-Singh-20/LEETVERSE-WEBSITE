@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, RotateCcw, Volume2, VolumeX, X, Maximize2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Maximize2 } from 'lucide-react';
 
 interface TactilePhotoDeckProps {
   images: string[];
@@ -36,7 +36,7 @@ export const TactilePhotoDeck: React.FC<TactilePhotoDeckProps> = ({
   onOpenFullScreen,
 }) => {
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const soundEnabled = true; // SFX always enabled
   const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Check window size for mobile adjustments
@@ -497,28 +497,32 @@ export const TactilePhotoDeck: React.FC<TactilePhotoDeckProps> = ({
         </button>
 
         {/* Re-stack Button */}
-        {currentIndex > 0 && (
-          <button
-            onClick={handleRestack}
-            title="Re-stack photos"
-            aria-label="Re-stack all photos"
-            style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'transparent',
-              color: 'var(--text-muted)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
-              cursor: 'pointer',
-              marginLeft: '4px',
-            }}
-          >
-            <RotateCcw size={14} />
-          </button>
-        )}
+        {/* Re-stack Button (Always reserved in DOM layout so Next/Prev never shifts!) */}
+        <button
+          onClick={handleRestack}
+          disabled={currentIndex === 0}
+          title="Re-stack photos"
+          aria-label="Re-stack all photos"
+          style={{
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'transparent',
+            color: 'var(--text-muted)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            cursor: currentIndex > 0 ? 'pointer' : 'default',
+            marginLeft: '4px',
+            opacity: currentIndex > 0 ? 1 : 0,
+            pointerEvents: currentIndex > 0 ? 'auto' : 'none',
+            visibility: currentIndex > 0 ? 'visible' : 'hidden',
+            transition: 'opacity 0.2s ease',
+          }}
+        >
+          <RotateCcw size={14} />
+        </button>
 
         {/* Fullscreen Trigger if on page */}
         {!isFullScreen && onOpenFullScreen && (
@@ -544,63 +548,6 @@ export const TactilePhotoDeck: React.FC<TactilePhotoDeckProps> = ({
           </button>
         )}
       </div>
-
-      {/* Bottom Left Sound Toggle (Reference Image ||| ON) */}
-      {isFullScreen && (
-        <button
-          onClick={() => setSoundEnabled(!soundEnabled)}
-          style={{
-            position: 'absolute',
-            bottom: '24px',
-            left: 'clamp(20px, 4vw, 40px)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'transparent',
-            border: 'none',
-            color: soundEnabled ? 'var(--text-primary)' : 'var(--text-dim)',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '12px',
-            cursor: 'pointer',
-            zIndex: 80,
-          }}
-        >
-          {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-          <span>SFX {soundEnabled ? 'ON' : 'OFF'}</span>
-        </button>
-      )}
-
-      {/* Top Right Close Button (Reference Image CLOSE X) */}
-      {isFullScreen && onClose && (
-        <button
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '24px',
-            right: 'clamp(20px, 4vw, 40px)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--text-primary)',
-            fontFamily: 'var(--font-mono)',
-            fontSize: '13px',
-            fontWeight: 700,
-            letterSpacing: '1px',
-            cursor: 'pointer',
-            zIndex: 80,
-            padding: '6px 12px',
-            borderRadius: '4px',
-            backgroundColor: 'rgba(255, 255, 255, 0.06)',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.12)')}
-          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.06)')}
-        >
-          <span>CLOSE</span>
-          <X size={18} />
-        </button>
-      )}
     </div>
   );
 };

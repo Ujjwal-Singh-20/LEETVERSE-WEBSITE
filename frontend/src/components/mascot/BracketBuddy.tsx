@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Reminder } from '../../types';
 import { fetchReminders } from '../../services/api';
 
@@ -48,7 +49,18 @@ function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function getCurrentSection(pathname: string): 'home' | 'members' | 'projects' | 'gallery' | 'global' {
+  const p = pathname.toLowerCase().trim();
+  if (p === '/' || p === '') return 'home';
+  if (p.startsWith('/members') || p.startsWith('/u/')) return 'members';
+  if (p.startsWith('/projects')) return 'projects';
+  if (p.startsWith('/gallery')) return 'gallery';
+  return 'global';
+}
+
 export const BracketBuddy: React.FC = () => {
+  const location = useLocation();
+  const [allReminders, setAllReminders] = useState<Reminder[]>([]);
   const [activeReminder, setActiveReminder] = useState<Reminder | null>(null);
 
   // Screen size check (disable completely on mobile/tablet < 768px)
@@ -109,19 +121,7 @@ export const BracketBuddy: React.FC = () => {
     fetchReminders()
       .then((reminders) => {
         if (!mounted) return;
-        const now = Date.now();
-        const activeList = reminders.filter((r) => {
-          const start = new Date(r.startAt).getTime();
-          const end = new Date(r.endAt).getTime();
-          return now >= start && now <= end;
-        });
-
-        if (activeList.length > 0) {
-          activeList.sort((a, b) => new Date(a.endAt).getTime() - new Date(b.endAt).getTime());
-          setActiveReminder(activeList[0]);
-        } else {
-          setActiveReminder(null);
-        }
+        setAllReminders(reminders);
       })
       .catch(() => {
         // quiet fallback
@@ -132,6 +132,38 @@ export const BracketBuddy: React.FC = () => {
     };
   }, []);
 
+  // 1b. Filter active reminder strictly for current page section
+  useEffect(() => {
+    const now = Date.now();
+    const activeList = allReminders.filter((r) => {
+      const start = new Date(r.startAt).getTime();
+      const end = new Date(r.endAt).getTime();
+      return now >= start && now <= end;
+    });
+
+    const currentSection = getCurrentSection(location.pathname);
+    const getSec = (r: Reminder) => (r.targetSection || r.section || 'global').toLowerCase();
+
+    // 1. First priority: Look for a reminder explicitly targeted to this section
+    const targeted = activeList.filter((r) => {
+      const s = getSec(r);
+      return s === currentSection || (currentSection === 'home' && s === 'hero');
+    });
+
+    // 2. Second priority: Reminders set to global
+    const globalReminders = activeList.filter((r) => getSec(r) === 'global');
+
+    if (targeted.length > 0) {
+      targeted.sort((a, b) => new Date(a.endAt).getTime() - new Date(b.endAt).getTime());
+      setActiveReminder(targeted[0]);
+    } else if (globalReminders.length > 0) {
+      globalReminders.sort((a, b) => new Date(a.endAt).getTime() - new Date(b.endAt).getTime());
+      setActiveReminder(globalReminders[0]);
+    } else {
+      setActiveReminder(null);
+    }
+  }, [allReminders, location.pathname]);
+
   // 2. Compute anchor position for active reminder
   const computeAnchorPosition = useCallback(() => {
     if (!activeReminder) return;
@@ -139,8 +171,9 @@ export const BracketBuddy: React.FC = () => {
     let targetX = window.innerWidth - CONTAINER_W - 24;
     let targetY = window.innerHeight - CONTAINER_H - 24;
 
-    if (activeReminder.targetSection && activeReminder.targetSection !== 'global') {
-      const el = document.getElementById(activeReminder.targetSection);
+    const targetSec = (activeReminder.targetSection || activeReminder.section || 'global').toLowerCase();
+    if (targetSec && targetSec !== 'global') {
+      const el = document.getElementById(targetSec);
       if (el) {
         const rect = el.getBoundingClientRect();
         targetX = Math.max(16, Math.min(window.innerWidth - CONTAINER_W - 16, rect.right - CONTAINER_W - 24));

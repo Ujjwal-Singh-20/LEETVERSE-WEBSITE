@@ -1,49 +1,53 @@
 import React from 'react';
 import { Github, Linkedin, Instagram } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 export const Footer: React.FC = () => {
+  const location = useLocation();
+  const isBusinessCard = location.pathname.startsWith('/u/');
+
   return (
     <footer
       style={{
         borderTop: '1px solid rgba(61, 255, 160, 0.1)',
         backgroundColor: '#040907',
-        padding: '50px 0 35px',
-        marginTop: '80px',
+        padding: isBusinessCard ? '24px 0 20px' : 'clamp(30px, 4.5vh, 48px) 0 clamp(18px, 2.5vh, 32px)',
+        marginTop: isBusinessCard ? '24px' : 'clamp(36px, 5vh, 70px)',
         position: 'relative',
         zIndex: 10,
       }}
     >
-      <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+      <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: isBusinessCard ? '16px' : '24px' }}>
         <div
           style={{
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            gap: '24px',
+            gap: '16px',
           }}
         >
           {/* Brand Info */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <img
               src="/logo.png"
               alt="LeetVerse Logo"
               style={{
-                width: '32px',
-                height: '32px',
+                width: isBusinessCard ? '24px' : '28px',
+                height: isBusinessCard ? '24px' : '28px',
                 objectFit: 'contain',
                 display: 'block',
                 filter: 'drop-shadow(0 0 6px rgba(0, 255, 157, 0.35))',
               }}
             />
-            <span className="wordmark" style={{ fontSize: 'clamp(1.4rem, 2.2vw, 1.8rem)' }}>
+            <span className="wordmark" style={{ fontSize: isBusinessCard ? '1.25rem' : 'clamp(1.2rem, 1.8vw, 1.5rem)' }}>
               <span className="wordmark-leet">LEET</span>
               <span className="wordmark-verse">VERSE</span>
             </span>
           </div>
 
           {/* Social Links */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <a
               href="https://github.com/leetverse"
               target="_blank"
@@ -53,8 +57,8 @@ export const Footer: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '40px',
-                height: '40px',
+                width: isBusinessCard ? '36px' : '40px',
+                height: isBusinessCard ? '36px' : '40px',
                 borderRadius: '50%',
                 background: 'rgba(13, 31, 22, 0.6)',
                 border: '1px solid rgba(61, 255, 160, 0.2)',
@@ -72,7 +76,7 @@ export const Footer: React.FC = () => {
                 e.currentTarget.style.transform = 'none';
               }}
             >
-              <Github size={18} />
+              <Github size={isBusinessCard ? 16 : 18} />
             </a>
 
             <a
@@ -84,8 +88,8 @@ export const Footer: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '40px',
-                height: '40px',
+                width: isBusinessCard ? '36px' : '40px',
+                height: isBusinessCard ? '36px' : '40px',
                 borderRadius: '50%',
                 background: 'rgba(13, 31, 22, 0.6)',
                 border: '1px solid rgba(61, 255, 160, 0.2)',
@@ -103,7 +107,7 @@ export const Footer: React.FC = () => {
                 e.currentTarget.style.transform = 'none';
               }}
             >
-              <Linkedin size={18} />
+              <Linkedin size={isBusinessCard ? 16 : 18} />
             </a>
 
             <a
@@ -115,8 +119,8 @@ export const Footer: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '40px',
-                height: '40px',
+                width: isBusinessCard ? '36px' : '40px',
+                height: isBusinessCard ? '36px' : '40px',
                 borderRadius: '50%',
                 background: 'rgba(13, 31, 22, 0.6)',
                 border: '1px solid rgba(61, 255, 160, 0.2)',
@@ -134,7 +138,7 @@ export const Footer: React.FC = () => {
                 e.currentTarget.style.transform = 'none';
               }}
             >
-              <Instagram size={18} />
+              <Instagram size={isBusinessCard ? 16 : 18} />
             </a>
           </div>
         </div>
@@ -143,11 +147,11 @@ export const Footer: React.FC = () => {
         <div
           style={{
             borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-            paddingTop: '20px',
+            paddingTop: isBusinessCard ? '12px' : '16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            fontSize: '0.8rem',
+            fontSize: '0.78rem',
             color: 'var(--text-dim)',
           }}
         >

@@ -23,7 +23,7 @@ const AppContent: React.FC = () => {
       {!isAdmin && <Navbar />}
       {!isAdmin && <BracketBuddy />}
 
-      <main style={{ position: 'relative', zIndex: 1 }}>
+      <main style={{ position: 'relative' }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/members" element={<Members />} />

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { fetchBusinessCard } from '../services/api';
 import { PublicMember } from '../types';
+import { getMemberTier } from '../utils/memberTiers';
 
 export const BusinessCard: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -126,34 +127,40 @@ export const BusinessCard: React.FC = () => {
     );
   }
 
+  const tier = getMemberTier(member.position);
+
   return (
     <div
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 160px)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 'clamp(100px, 14vh, 140px) 24px 60px',
+        padding: 'clamp(90px, 12vh, 125px) clamp(16px, 4vw, 24px) 30px',
         position: 'relative',
+        overflow: 'hidden',
+        width: '100%',
+        maxWidth: '100vw',
       }}
     >
-      {/* Background Soft Glow */}
+      {/* Background Soft Glow matching Member Tier */}
       <div
         style={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '500px',
-          height: '500px',
-          background: 'radial-gradient(circle, rgba(0, 255, 157, 0.08) 0%, transparent 70%)',
+          width: 'min(480px, 90vw)',
+          height: 'min(480px, 90vw)',
+          background: `radial-gradient(circle, ${tier.glowColor} 0%, transparent 70%)`,
           pointerEvents: 'none',
+          transition: 'all var(--transition-smooth)',
         }}
       />
 
       {/* Top back navigation */}
-      <div style={{ maxWidth: 'clamp(360px, 92vw, 480px)', width: '100%', marginBottom: '20px' }}>
+      <div style={{ maxWidth: 'min(92vw, 460px)', width: '100%', marginBottom: '16px' }}>
         <Link
           to="/members"
           style={{
@@ -161,11 +168,11 @@ export const BusinessCard: React.FC = () => {
             alignItems: 'center',
             gap: '8px',
             color: 'var(--text-muted)',
-            fontSize: '1rem',
+            fontSize: '0.95rem',
             fontWeight: 600,
             transition: 'color var(--transition-fast)',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent-primary)')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = tier.accentColor)}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
         >
           <ArrowLeft size={18} /> Back to Members
@@ -176,14 +183,15 @@ export const BusinessCard: React.FC = () => {
       <div
         className="glass-panel mc-bg card-bg"
         style={{
-          maxWidth: 'clamp(360px, 92vw, 480px)',
+          maxWidth: 'min(92vw, 460px)',
           width: '100%',
-          padding: 'clamp(28px, 4vw, 40px)',
+          padding: 'clamp(24px, 4vw, 36px)',
           borderRadius: 'var(--radius-lg)',
           position: 'relative',
-          border: '1px solid var(--accent-border)',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px var(--accent-glow-subtle)',
+          border: `1.5px solid ${tier.borderColor}`,
+          boxShadow: `0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px ${tier.glowColor}`,
           overflow: 'hidden',
+          transition: 'border-color var(--transition-smooth), box-shadow var(--transition-smooth)',
         }}
       >
         {/* Verified Society Chip */}
@@ -196,12 +204,12 @@ export const BusinessCard: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={18} color="var(--accent-primary)" />
+            <ShieldCheck size={18} color={tier.accentColor} />
             <span
               className="mono-tag"
               style={{
                 fontSize: '12px',
-                color: 'var(--accent-primary)',
+                color: tier.accentColor,
                 fontWeight: 700,
               }}
             >
@@ -215,9 +223,9 @@ export const BusinessCard: React.FC = () => {
             style={{
               padding: '8px 14px',
               borderRadius: 'var(--radius-full)',
-              background: 'rgba(0, 255, 157, 0.1)',
-              border: '1px solid var(--accent-border-subtle)',
-              color: copied ? 'var(--accent-primary)' : 'var(--text-accent)',
+              background: tier.bgSubtle,
+              border: `1px solid ${tier.borderColor}`,
+              color: copied ? tier.accentColor : 'var(--text-accent)',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
@@ -254,15 +262,15 @@ export const BusinessCard: React.FC = () => {
                 borderRadius: '50%',
                 background: member.photoUrl
                   ? `url("${member.photoUrl}") center/cover no-repeat`
-                  : 'radial-gradient(circle, rgba(79, 242, 174, 0.75) 0%, rgba(18, 42, 30, 0.8) 70%)',
+                  : `radial-gradient(circle, ${tier.glowColor} 0%, rgba(18, 42, 30, 0.8) 70%)`,
                 filter: 'blur(20px)',
-                opacity: 0.8,
+                opacity: 0.85,
                 pointerEvents: 'none',
                 zIndex: 0,
               }}
             />
 
-            {/* Sharp Foreground Avatar with 2px Ring & Static Glow */}
+            {/* Sharp Foreground Avatar with Tier Colored Ring & Static Glow */}
             <div
               className="mc-ring"
               style={{
@@ -274,13 +282,13 @@ export const BusinessCard: React.FC = () => {
                 background: member.photoUrl
                   ? `url("${member.photoUrl}") center/cover no-repeat`
                   : 'linear-gradient(135deg, #122a1e 0%, #204b36 100%)',
-                border: '2px solid #4ff2ae',
+                border: `2px solid ${tier.ringColor}`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: 'clamp(2.8rem, 4.2vw, 3.4rem)',
                 fontWeight: 800,
-                color: 'var(--text-accent)',
+                color: tier.accentColor,
               }}
             >
               {!member.photoUrl && member.name[0]}
@@ -301,13 +309,33 @@ export const BusinessCard: React.FC = () => {
           <div
             style={{
               fontSize: 'clamp(1.05rem, 1.4vw, 1.2rem)',
-              color: 'var(--accent-primary)',
+              color: tier.accentColor,
               fontWeight: 600,
-              marginBottom: '8px',
+              marginBottom: '6px',
             }}
           >
             {member.position}
           </div>
+
+          {tier.type !== 'member' && (
+            <div style={{ marginBottom: '10px' }}>
+              <span
+                className="mono-tag"
+                style={{
+                  fontSize: '11px',
+                  padding: '3px 10px',
+                  borderRadius: 'var(--radius-full)',
+                  background: tier.bgSubtle,
+                  color: tier.accentColor,
+                  border: `1px solid ${tier.borderColor}`,
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                }}
+              >
+                {tier.badge}
+              </span>
+            </div>
+          )}
 
           <div
             className="mono-tag"
