@@ -11,6 +11,9 @@ import {
   Search,
   Crown,
   ShieldCheck,
+  Github,
+  Linkedin,
+  Instagram,
 } from 'lucide-react';
 import {
   fetchAdminMemberTree,
@@ -525,7 +528,7 @@ export const AdminMembers: React.FC = () => {
                                                 textTransform: 'uppercase',
                                               }}
                                             >
-                                              {d}
+                                              {formatDomainName(d)}
                                             </span>
                                           ))}
                                         </div>
@@ -534,6 +537,13 @@ export const AdminMembers: React.FC = () => {
                                   </div>
 
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    {(member.github || member.linkedin || member.instagram) && (
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#5b826d' }}>
+                                        {member.github && <Github size={12} />}
+                                        {member.linkedin && <Linkedin size={12} />}
+                                        {member.instagram && <Instagram size={12} />}
+                                      </div>
+                                    )}
                                     <span
                                       style={{
                                         fontSize: '0.75rem',
@@ -1282,6 +1292,71 @@ export const AdminMembers: React.FC = () => {
                     color: '#f0f7f3',
                   }}
                 />
+              </div>
+
+              {/* Social Links */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '6px', fontWeight: 600 }}>
+                  Social Links (Optional)
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#07120c', border: '1px solid #163324', borderRadius: '6px', padding: '0 10px' }}>
+                    <Github size={14} color="#7a9e8b" />
+                    <input
+                      type="text"
+                      value={addForm.github}
+                      onChange={(e) => setAddForm({ ...addForm, github: e.target.value })}
+                      placeholder="GitHub URL or handle (e.g. github.com/username)"
+                      style={{
+                        flex: 1,
+                        padding: '8px 0',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        color: '#f0f7f3',
+                        fontSize: '0.82rem',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#07120c', border: '1px solid #163324', borderRadius: '6px', padding: '0 10px' }}>
+                    <Linkedin size={14} color="#7a9e8b" />
+                    <input
+                      type="text"
+                      value={addForm.linkedin}
+                      onChange={(e) => setAddForm({ ...addForm, linkedin: e.target.value })}
+                      placeholder="LinkedIn URL (e.g. linkedin.com/in/username)"
+                      style={{
+                        flex: 1,
+                        padding: '8px 0',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        color: '#f0f7f3',
+                        fontSize: '0.82rem',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: '#07120c', border: '1px solid #163324', borderRadius: '6px', padding: '0 10px' }}>
+                    <Instagram size={14} color="#7a9e8b" />
+                    <input
+                      type="text"
+                      value={addForm.instagram}
+                      onChange={(e) => setAddForm({ ...addForm, instagram: e.target.value })}
+                      placeholder="Instagram URL or handle (e.g. instagram.com/handle)"
+                      style={{
+                        flex: 1,
+                        padding: '8px 0',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        color: '#f0f7f3',
+                        fontSize: '0.82rem',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Actions */}

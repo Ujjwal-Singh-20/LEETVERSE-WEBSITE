@@ -25,7 +25,7 @@ import {
   Linkedin,
   Instagram,
 } from 'lucide-react';
-import { fetchMembers } from '../services/api';
+import { fetchMembers, fetchBusinessCard } from '../services/api';
 import { DomainGroup, PublicMember } from '../types';
 import {
   groupMembersByHierarchy,
@@ -65,6 +65,8 @@ function getDomainMeta(slug: string) {
   };
 }
 
+const socialsCache = new Map<string, { github?: string | null; linkedin?: string | null; instagram?: string | null }>();
+
 /**
  * Reusable Member Hierarchy Card with signature tier border, glowing ring, and hints
  * (No top-right blur circle point, clean executive finish)
@@ -77,9 +79,68 @@ const MemberCard: React.FC<{
   const navigate = useNavigate();
   const tier = (member as HierarchyMember).tier || getMemberTier(member.position, domainSlug);
 
-  const githubLink = member.github?.trim() || null;
-  const linkedinLink = member.linkedin?.trim() || null;
-  const instagramLink = member.instagram?.trim() || null;
+  const [socials, setSocials] = useState<{
+    github?: string | null;
+    linkedin?: string | null;
+    instagram?: string | null;
+  }>(() => {
+    if (member.github !== undefined || member.linkedin !== undefined || member.instagram !== undefined) {
+      return {
+        github: member.github,
+        linkedin: member.linkedin,
+        instagram: member.instagram,
+      };
+    }
+    return socialsCache.get(member.username) || {};
+  });
+
+  useEffect(() => {
+    // If socials were already provided in the member prop, update state and cache
+    if (member.github !== undefined || member.linkedin !== undefined || member.instagram !== undefined) {
+      setSocials({
+        github: member.github,
+        linkedin: member.linkedin,
+        instagram: member.instagram,
+      });
+      socialsCache.set(member.username, {
+        github: member.github,
+        linkedin: member.linkedin,
+        instagram: member.instagram,
+      });
+      return;
+    }
+
+    // If already in memory cache, use cached values
+    if (socialsCache.has(member.username)) {
+      setSocials(socialsCache.get(member.username)!);
+      return;
+    }
+
+    // Fallback: If /api/members omitted social fields, fetch /api/u/:username to enrich card
+    let isMounted = true;
+    fetchBusinessCard(member.username)
+      .then((data) => {
+        if (!isMounted) return;
+        const res = {
+          github: data.github || null,
+          linkedin: data.linkedin || null,
+          instagram: data.instagram || null,
+        };
+        socialsCache.set(member.username, res);
+        setSocials(res);
+      })
+      .catch(() => {
+        // Silently ignore if member profile fetch fails
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [member.username, member.github, member.linkedin, member.instagram]);
+
+  const githubLink = socials.github?.trim() || null;
+  const linkedinLink = socials.linkedin?.trim() || null;
+  const instagramLink = socials.instagram?.trim() || null;
   const hasSocials = Boolean(githubLink || linkedinLink || instagramLink);
 
   const formatUrl = (url: string) =>
