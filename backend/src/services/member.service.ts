@@ -198,6 +198,24 @@ export class MemberService {
       status: 'active';
     }>;
   }>> {
+    const formatDomainTitle = (slug: string): string => {
+      const s = slug.toLowerCase().trim();
+      if (s === 'ai-ml' || s === 'aiml' || s === 'ai/ml') return 'AI/ML';
+      if (s === 'cp-dsa' || s === 'cp' || s === 'dsa' || s === 'competitive-programming' || s === 'competetive-programming') {
+        return 'COMPETITIVE PROGRAMMING';
+      }
+      if (s === 'graphic-design' || s === 'design' || s === 'graphics') return 'GRAPHIC DESIGN';
+      if (s === 'marketing-pr' || s === 'marketing' || s === 'pr') return 'MARKETING AND PR';
+      if (s === 'cloud' || s === 'cloud-devops') return 'CLOUD';
+      if (s === 'video-editing' || s === 'vide-editing' || s === 'video') return 'VIDEO EDITING';
+      if (s === 'web-dev' || s === 'web' || s === 'web-development') return 'WEB DEV';
+      if (s === 'app-dev' || s === 'app' || s === 'mobile-dev' || s === 'app-development') return 'APP DEV';
+      if (s === 'data-science' || s === 'data-analytics' || s === 'data-science-and-analytics' || s === 'data-science-and-data-analytics') {
+        return 'DATA SCIENCE AND ANALYTICS';
+      }
+      return slug.replace(/-/g, ' ').toUpperCase();
+    };
+
     const domainsSnap = await db.collection(COLLECTIONS.MEMBERS).listDocuments();
     const domainNameMap = new Map<string, string>();
     const domainMembersMap = new Map<string, Array<any>>();
@@ -206,10 +224,7 @@ export class MemberService {
     for (const domainDoc of domainsSnap) {
       const dSlug = domainDoc.id;
       if (!orderedDomainSlugs.includes(dSlug)) orderedDomainSlugs.push(dSlug);
-      domainNameMap.set(
-        dSlug,
-        dSlug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-      );
+      domainNameMap.set(dSlug, formatDomainTitle(dSlug));
       if (!domainMembersMap.has(dSlug)) {
         domainMembersMap.set(dSlug, []);
       }
@@ -225,23 +240,13 @@ export class MemberService {
           ? data.domains
           : [dSlug];
 
-        const memberItem = {
-          username: data.username,
-          name: data.name,
-          position: data.position,
-          photoUrl: data.photoUrl || null,
-          domains: memberDomains,
-          status: 'active' as const,
-        };
+        const memberItem = serializePublicMember(data, dSlug);
 
         // Map this member into all their designated domains
         for (const targetSlug of memberDomains) {
           if (!orderedDomainSlugs.includes(targetSlug)) orderedDomainSlugs.push(targetSlug);
           if (!domainNameMap.has(targetSlug)) {
-            domainNameMap.set(
-              targetSlug,
-              targetSlug.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-            );
+            domainNameMap.set(targetSlug, formatDomainTitle(targetSlug));
           }
           if (!domainMembersMap.has(targetSlug)) {
             domainMembersMap.set(targetSlug, []);
@@ -257,7 +262,7 @@ export class MemberService {
     return orderedDomainSlugs
       .map((slug) => ({
         slug,
-        name: domainNameMap.get(slug) || slug,
+        name: domainNameMap.get(slug) || formatDomainTitle(slug),
         members: domainMembersMap.get(slug) || [],
       }))
       .filter((d) => d.members.length > 0);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Crown,
   Award,
@@ -32,6 +32,7 @@ import {
   getMemberTier,
   HierarchyMember,
   TIER_CONFIGS,
+  formatDomainName,
 } from '../utils/memberTiers';
 
 // Resolve an icon for the domain, while keeping colors 100% unified with LeetVerse design system
@@ -73,12 +74,28 @@ const MemberCard: React.FC<{
   domainSlug?: string;
   isPresident?: boolean;
 }> = ({ member, domainSlug, isPresident = false }) => {
+  const navigate = useNavigate();
   const tier = (member as HierarchyMember).tier || getMemberTier(member.position, domainSlug);
-  const hasSocials = Boolean(member.github || member.linkedin || member.instagram);
+
+  const githubLink = member.github?.trim() || null;
+  const linkedinLink = member.linkedin?.trim() || null;
+  const instagramLink = member.instagram?.trim() || null;
+  const hasSocials = Boolean(githubLink || linkedinLink || instagramLink);
+
+  const formatUrl = (url: string) =>
+    url.startsWith('http://') || url.startsWith('https://') ? url : `https://${url}`;
 
   return (
-    <Link
-      to={`/u/${member.username}`}
+    <div
+      onClick={() => navigate(`/u/${member.username}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigate(`/u/${member.username}`);
+        }
+      }}
       className="glass-panel"
       style={{
         display: 'flex',
@@ -93,6 +110,7 @@ const MemberCard: React.FC<{
         backgroundColor: '#0a1711',
         overflow: 'hidden',
         minHeight: '160px',
+        cursor: 'pointer',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
@@ -243,7 +261,7 @@ const MemberCard: React.FC<{
                     textTransform: 'uppercase',
                   }}
                 >
-                  {d}
+                  {formatDomainName(d)}
                 </span>
               ))}
             </div>
@@ -302,16 +320,19 @@ const MemberCard: React.FC<{
                 alignItems: 'center',
                 gap: '8px',
                 flexShrink: 0,
+                position: 'relative',
+                zIndex: 2,
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {member.github && (
+              {githubLink && (
                 <a
-                  href={member.github}
+                  href={formatUrl(githubLink)}
                   target="_blank"
                   rel="noreferrer"
                   title="GitHub"
                   aria-label={`${member.name}'s GitHub`}
+                  onClick={(e) => e.stopPropagation()}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -319,32 +340,35 @@ const MemberCard: React.FC<{
                     width: '26px',
                     height: '26px',
                     borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-muted)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: 'var(--text-secondary)',
                     transition: 'all var(--transition-fast)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = tier.accentColor;
                     e.currentTarget.style.color = tier.accentColor;
                     e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
                     e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                   }}
                 >
                   <Github size={13} />
                 </a>
               )}
-              {member.linkedin && (
+              {linkedinLink && (
                 <a
-                  href={member.linkedin}
+                  href={formatUrl(linkedinLink)}
                   target="_blank"
                   rel="noreferrer"
                   title="LinkedIn"
                   aria-label={`${member.name}'s LinkedIn`}
+                  onClick={(e) => e.stopPropagation()}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -352,32 +376,35 @@ const MemberCard: React.FC<{
                     width: '26px',
                     height: '26px',
                     borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-muted)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: 'var(--text-secondary)',
                     transition: 'all var(--transition-fast)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = tier.accentColor;
                     e.currentTarget.style.color = tier.accentColor;
                     e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
                     e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                   }}
                 >
                   <Linkedin size={13} />
                 </a>
               )}
-              {member.instagram && (
+              {instagramLink && (
                 <a
-                  href={member.instagram}
+                  href={formatUrl(instagramLink)}
                   target="_blank"
                   rel="noreferrer"
                   title="Instagram"
                   aria-label={`${member.name}'s Instagram`}
+                  onClick={(e) => e.stopPropagation()}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -385,20 +412,22 @@ const MemberCard: React.FC<{
                     width: '26px',
                     height: '26px',
                     borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: 'var(--text-muted)',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    color: 'var(--text-secondary)',
                     transition: 'all var(--transition-fast)',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = tier.accentColor;
                     e.currentTarget.style.color = tier.accentColor;
                     e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.14)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                    e.currentTarget.style.color = 'var(--text-muted)';
+                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                    e.currentTarget.style.color = 'var(--text-secondary)';
                     e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                   }}
                 >
                   <Instagram size={13} />
@@ -408,7 +437,7 @@ const MemberCard: React.FC<{
           )}
         </div>
       </div>
-    </Link>
+    </div>
   );
 };
 
@@ -890,10 +919,10 @@ export const Members: React.FC = () => {
                       {/* Domain Title */}
                       <div style={{ marginBottom: '20px' }}>
                         <h3 style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                          {domain.name}
+                          {formatDomainName(domain.name || domain.slug)}
                         </h3>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', lineHeight: 1.55 }}>
-                          Explore projects, team members, and development initiatives in {domain.name}.
+                          Explore projects, team members, and development initiatives in {formatDomainName(domain.name || domain.slug)}.
                         </p>
                       </div>
 
@@ -1060,7 +1089,7 @@ export const Members: React.FC = () => {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <h2 style={{ fontSize: 'clamp(1.3rem, 2vw, 1.7rem)', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {activeModalDomain.name}
+                      {formatDomainName(activeModalDomain.name || activeModalDomain.slug)}
                     </h2>
                     <span
                       className="mono-tag"
@@ -1125,7 +1154,7 @@ export const Members: React.FC = () => {
             >
               {modalMembers.length === 0 ? (
                 <div style={{ gridColumn: '1 / -1', padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                  No members currently listed in {activeModalDomain.name}.
+                  No members currently listed in {formatDomainName(activeModalDomain.name || activeModalDomain.slug)}.
                 </div>
               ) : (
                 modalMembers.map((member) => (

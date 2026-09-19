@@ -288,3 +288,57 @@ export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups
     domainGroups: filteredDomainGroups,
   };
 }
+
+/**
+ * Format domain slug or raw name into standardized FULL CAPS title.
+ * e.g. cp-dsa -> COMPETITIVE PROGRAMMING, ai-ml -> AI/ML
+ */
+export function formatDomainName(slug: string = ''): string {
+  const s = slug.toLowerCase().trim();
+  if (s === 'ai-ml' || s === 'aiml' || s === 'ai/ml') return 'AI/ML';
+  if (
+    s === 'cp-dsa' ||
+    s === 'cp' ||
+    s === 'dsa' ||
+    s === 'cp dsa' ||
+    s === 'competitive-programming' ||
+    s === 'competetive-programming' ||
+    s === 'competitive programming' ||
+    s === 'competetive programming'
+  ) {
+    return 'COMPETITIVE PROGRAMMING';
+  }
+  if (s === 'graphic-design' || s === 'design' || s === 'graphics' || s === 'graphic design') {
+    return 'GRAPHIC DESIGN';
+  }
+  if (s === 'marketing-pr' || s === 'marketing' || s === 'pr' || s === 'marketing and pr') {
+    return 'MARKETING AND PR';
+  }
+  if (s === 'cloud' || s === 'cloud-devops' || s === 'cloud devops') {
+    return 'CLOUD';
+  }
+  if (s === 'video-editing' || s === 'vide-editing' || s === 'video' || s === 'video editing' || s === 'vide editing') {
+    return 'VIDEO EDITING';
+  }
+  if (s === 'web-dev' || s === 'web' || s === 'web-development' || s === 'web dev') {
+    return 'WEB DEV';
+  }
+  if (s === 'app-dev' || s === 'app' || s === 'mobile-dev' || s === 'app-development' || s === 'app dev') {
+    return 'APP DEV';
+  }
+  if (
+    s === 'data-science' ||
+    s === 'data-analytics' ||
+    s === 'data-science-and-analytics' ||
+    s === 'data-science-and-data-analytics' ||
+    s === 'data science' ||
+    s === 'data analytics' ||
+    s === 'data science and analytics' ||
+    s === 'data science and data analytics' ||
+    s === 'data science & analytics' ||
+    s === 'data science & data analytics'
+  ) {
+    return 'DATA SCIENCE AND DATA ANALYTICS';
+  }
+  return slug.replace(/-/g, ' ').toUpperCase();
+}

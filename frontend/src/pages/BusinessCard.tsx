@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { fetchBusinessCard } from '../services/api';
 import { PublicMember } from '../types';
-import { getMemberTier } from '../utils/memberTiers';
+import { getMemberTier, formatDomainName } from '../utils/memberTiers';
 
 export const BusinessCard: React.FC = () => {
   const { username } = useParams<{ username: string }>();
@@ -363,7 +363,7 @@ export const BusinessCard: React.FC = () => {
                     letterSpacing: '0.04em',
                   }}
                 >
-                  {d}
+                  {formatDomainName(d)}
                 </span>
               ))}
             </div>

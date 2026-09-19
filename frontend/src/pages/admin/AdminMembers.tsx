@@ -21,18 +21,18 @@ import {
   uploadSingleFile,
 } from '../../services/api';
 import { DomainTreeNode, AdminMember } from '../../types';
-import { STANDARD_POSITIONS } from '../../utils/memberTiers';
+import { STANDARD_POSITIONS, formatDomainName } from '../../utils/memberTiers';
 
 export const PRESET_DOMAINS = [
-  { slug: 'graphic-design', label: 'Graphic Design' },
-  { slug: 'marketing-pr', label: 'Marketing and PR' },
-  { slug: 'cloud', label: 'Cloud' },
-  { slug: 'video-editing', label: 'Video Editing' },
-  { slug: 'web-dev', label: 'Web Dev' },
-  { slug: 'app-dev', label: 'App Dev' },
-  { slug: 'data-science', label: 'Data Science & Analytics' },
+  { slug: 'graphic-design', label: 'GRAPHIC DESIGN' },
+  { slug: 'marketing-pr', label: 'MARKETING AND PR' },
+  { slug: 'cloud', label: 'CLOUD' },
+  { slug: 'video-editing', label: 'VIDEO EDITING' },
+  { slug: 'web-dev', label: 'WEB DEV' },
+  { slug: 'app-dev', label: 'APP DEV' },
+  { slug: 'data-science', label: 'DATA SCIENCE AND DATA ANALYTICS' },
   { slug: 'ai-ml', label: 'AI/ML' },
-  { slug: 'cp-dsa', label: 'Competitive Programming' },
+  { slug: 'cp-dsa', label: 'COMPETITIVE PROGRAMMING' },
 ];
 
 export type RoleLevel =
@@ -80,12 +80,12 @@ export const AdminMembers: React.FC = () => {
     PRESET_DOMAINS.forEach((d) => map.set(d.slug, d.label));
     tree.forEach((t) => {
       if (t.slug !== 'executive' && !map.has(t.slug)) {
-        map.set(t.slug, t.name.toUpperCase());
+        map.set(t.slug, formatDomainName(t.name || t.slug));
       }
     });
     customDomainList.forEach((c) => {
       if (!map.has(c)) {
-        map.set(c, c.toUpperCase());
+        map.set(c, formatDomainName(c));
       }
     });
     return Array.from(map.entries()).map(([slug, label]) => ({ slug, label }));
@@ -435,7 +435,7 @@ export const AdminMembers: React.FC = () => {
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: '#e6ede8' }}>
                           {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                          <span>{domain.name}</span>
+                          <span>{formatDomainName(domain.name || domain.slug)}</span>
                           <span style={{ fontSize: '0.75rem', color: '#5b826d', fontFamily: 'var(--font-mono)' }}>
                             ({domain.slug})
                           </span>
