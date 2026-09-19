@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   Crown,
   Award,
+  ShieldCheck,
   Terminal,
   Palette,
   Search,
@@ -14,6 +15,9 @@ import {
   Cpu,
   Smartphone,
   Cloud,
+  Megaphone,
+  Video,
+  BarChart3,
   Layers,
   Code2,
   Briefcase,
@@ -35,20 +39,24 @@ function getDomainMeta(slug: string) {
   const s = slug.toLowerCase();
   let Icon = Layers;
 
-  if (s.includes('web')) {
-    Icon = Globe;
-  } else if (s.includes('ai') || s.includes('ml') || s.includes('intelligence')) {
-    Icon = Cpu;
-  } else if (s.includes('app') || s.includes('mobile') || s.includes('ios') || s.includes('android')) {
-    Icon = Smartphone;
-  } else if (s.includes('design') || s.includes('ui') || s.includes('ux') || s.includes('creative')) {
-    Icon = Palette;
-  } else if (s.includes('cp') || s.includes('dsa') || s.includes('algo') || s.includes('code')) {
-    Icon = Terminal;
-  } else if (s.includes('cloud') || s.includes('devops') || s.includes('infra') || s.includes('security')) {
-    Icon = Cloud;
-  } else if (s.includes('management') || s.includes('pr') || s.includes('event') || s.includes('lead')) {
-    Icon = Briefcase;
+  if (s.includes('graphic') || s.includes('design') || s.includes('ui') || s.includes('ux') || s.includes('creative')) {
+    Icon = Palette; // Graphic design
+  } else if (s.includes('market') || s.includes('pr') || s.includes('public') || s.includes('brand')) {
+    Icon = Megaphone; // Marketing and PR
+  } else if (s.includes('cloud') || s.includes('devops') || s.includes('infra') || s.includes('aws')) {
+    Icon = Cloud; // Cloud
+  } else if (s.includes('video') || s.includes('film') || s.includes('vide') || s.includes('edit') || s.includes('media') || s.includes('vfx')) {
+    Icon = Video; // Video Editing
+  } else if (s.includes('web') || s.includes('frontend') || s.includes('fullstack')) {
+    Icon = Globe; // Web Dev
+  } else if (s.includes('app') || s.includes('mobile') || s.includes('ios') || s.includes('android') || s.includes('flutter')) {
+    Icon = Smartphone; // App Dev
+  } else if (s.includes('data') || s.includes('analytics') || s.includes('analysis') || s.includes('science') || s.includes('bi')) {
+    Icon = BarChart3; // Data Science and Data Analytics
+  } else if (s.includes('ai') || s.includes('ml') || s.includes('intelligence') || s.includes('learning')) {
+    Icon = Cpu; // AI/ML
+  } else if (s.includes('cp') || s.includes('dsa') || s.includes('algo') || s.includes('competitive') || s.includes('code')) {
+    Icon = Terminal; // Competitive Programming
   }
 
   return {
@@ -723,116 +731,47 @@ export const Members: React.FC = () => {
               </div>
             )}
 
-            {/* 3 & 4. TECH & NON-TECH LEADS TIER (Side by Side) */}
-            {(hierarchy.techLeads.length > 0 || hierarchy.nonTechLeads.length > 0) && (
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns:
-                    hierarchy.techLeads.length > 0 && hierarchy.nonTechLeads.length > 0
-                      ? 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))'
-                      : '1fr',
-                  gap: 'clamp(28px, 4vw, 44px)',
-                  alignItems: 'start',
-                }}
-              >
-                {/* 3. TECH LEADS TIER (Society Tech Leadership) */}
-                {hierarchy.techLeads.length > 0 && (
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: '20px',
-                        borderBottom: '1px solid rgba(0, 255, 157, 0.15)',
-                        paddingBottom: '14px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Code2 size={22} color={TIER_CONFIGS['tech-lead'].accentColor} />
-                        <h2 style={{ fontSize: 'clamp(1.2rem, 1.8vw, 1.5rem)' }}>Tech Leads</h2>
-                      </div>
-                      <span
-                        className="mono-tag"
-                        style={{
-                          padding: '4px 10px',
-                          background: TIER_CONFIGS['tech-lead'].bgSubtle,
-                          color: TIER_CONFIGS['tech-lead'].accentColor,
-                          border: `1px solid ${TIER_CONFIGS['tech-lead'].borderColor}`,
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                        }}
-                      >
-                        {hierarchy.techLeads.length} {hierarchy.techLeads.length === 1 ? 'Lead' : 'Leads'}
-                      </span>
-                    </div>
+            {/* 3. GENERAL SECRETARIES TIER */}
+            {hierarchy.generalSecretaries.length > 0 && (
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                  <span
+                    className="mono-tag"
+                    style={{
+                      padding: '4px 14px',
+                      background: TIER_CONFIGS['general-secretary'].bgSubtle,
+                      color: TIER_CONFIGS['general-secretary'].accentColor,
+                      border: `1px solid ${TIER_CONFIGS['general-secretary'].borderColor}`,
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      letterSpacing: '0.06em',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <ShieldCheck size={14} /> GENERAL {hierarchy.generalSecretaries.length > 1 ? 'SECRETARIES' : 'SECRETARY'}
+                  </span>
+                </div>
 
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                          hierarchy.techLeads.length > 1
-                            ? 'repeat(auto-fill, minmax(280px, 1fr))'
-                            : '1fr',
-                        gap: '20px',
-                      }}
-                    >
-                      {hierarchy.techLeads.map((lead) => (
-                        <MemberCard key={lead.username} member={lead} domainSlug={lead.domainSlug} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* 4. NON-TECH LEADS TIER (Society Non-Tech Leadership) */}
-                {hierarchy.nonTechLeads.length > 0 && (
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: '20px',
-                        borderBottom: '1px solid rgba(244, 63, 94, 0.2)',
-                        paddingBottom: '14px',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Palette size={22} color={TIER_CONFIGS['non-tech-lead'].accentColor} />
-                        <h2 style={{ fontSize: 'clamp(1.2rem, 1.8vw, 1.5rem)' }}>Non-Tech Leads</h2>
-                      </div>
-                      <span
-                        className="mono-tag"
-                        style={{
-                          padding: '4px 10px',
-                          background: TIER_CONFIGS['non-tech-lead'].bgSubtle,
-                          color: TIER_CONFIGS['non-tech-lead'].accentColor,
-                          border: `1px solid ${TIER_CONFIGS['non-tech-lead'].borderColor}`,
-                          borderRadius: '6px',
-                          fontSize: '12px',
-                        }}
-                      >
-                        {hierarchy.nonTechLeads.length} {hierarchy.nonTechLeads.length === 1 ? 'Lead' : 'Leads'}
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns:
-                          hierarchy.nonTechLeads.length > 1
-                            ? 'repeat(auto-fill, minmax(280px, 1fr))'
-                            : '1fr',
-                        gap: '20px',
-                      }}
-                    >
-                      {hierarchy.nonTechLeads.map((lead) => (
-                        <MemberCard key={lead.username} member={lead} domainSlug={lead.domainSlug} />
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns:
+                      hierarchy.generalSecretaries.length === 1
+                        ? '1fr'
+                        : 'repeat(auto-fit, minmax(300px, 1fr))',
+                    justifyContent: 'center',
+                    gap: '24px',
+                    maxWidth: hierarchy.generalSecretaries.length === 1 ? '460px' : '880px',
+                    margin: '0 auto',
+                  }}
+                >
+                  {hierarchy.generalSecretaries.map((gs) => (
+                    <MemberCard key={gs.username} member={gs} />
+                  ))}
+                </div>
               </div>
             )}
 

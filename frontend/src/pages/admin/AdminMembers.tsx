@@ -24,20 +24,21 @@ import { DomainTreeNode, AdminMember } from '../../types';
 import { STANDARD_POSITIONS } from '../../utils/memberTiers';
 
 export const PRESET_DOMAINS = [
+  { slug: 'graphic-design', label: 'Graphic Design' },
+  { slug: 'marketing-pr', label: 'Marketing and PR' },
+  { slug: 'cloud', label: 'Cloud' },
+  { slug: 'video-editing', label: 'Video Editing' },
+  { slug: 'web-dev', label: 'Web Dev' },
+  { slug: 'app-dev', label: 'App Dev' },
+  { slug: 'data-science', label: 'Data Science & Analytics' },
   { slug: 'ai-ml', label: 'AI/ML' },
-  { slug: 'web-dev', label: 'WEB-DEV' },
-  { slug: 'app-dev', label: 'APP-DEV' },
-  { slug: 'design', label: 'DESIGN' },
-  { slug: 'marketing', label: 'MARKETING' },
-  { slug: 'cp-dsa', label: 'CP' },
-  { slug: 'cloud-devops', label: 'CLOUD' },
+  { slug: 'cp-dsa', label: 'Competitive Programming' },
 ];
 
 export type RoleLevel =
   | 'PRESIDENT'
   | 'VICE PRESIDENT'
-  | 'TECH LEAD'
-  | 'NON-TECH LEAD'
+  | 'GENERAL SECRETARY'
   | 'LEAD'
   | 'ASST LEAD'
   | 'MEMBER';
@@ -45,8 +46,7 @@ export type RoleLevel =
 export const isExecutiveRole = (role: RoleLevel) =>
   role === 'PRESIDENT' ||
   role === 'VICE PRESIDENT' ||
-  role === 'TECH LEAD' ||
-  role === 'NON-TECH LEAD';
+  role === 'GENERAL SECRETARY';
 
 export const AdminMembers: React.FC = () => {
   const [tree, setTree] = useState<DomainTreeNode[]>([]);
@@ -58,7 +58,7 @@ export const AdminMembers: React.FC = () => {
   // Modal State for adding a member
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<RoleLevel>('MEMBER');
-  const [addFormDomains, setAddFormDomains] = useState<string[]>(['ai-ml']);
+  const [addFormDomains, setAddFormDomains] = useState<string[]>(['web-dev']);
   const [customDomainList, setCustomDomainList] = useState<string[]>([]);
   const [newDomainInput, setNewDomainInput] = useState<string>('');
   const [addForm, setAddForm] = useState({
@@ -98,21 +98,19 @@ export const AdminMembers: React.FC = () => {
       targetDomains = ['executive'];
       setAddFormDomains(['executive']);
     } else if (addFormDomains.includes('executive')) {
-      targetDomains = ['ai-ml'];
-      setAddFormDomains(['ai-ml']);
+      targetDomains = ['web-dev'];
+      setAddFormDomains(['web-dev']);
     }
 
-    const firstDomain = targetDomains[0] || 'ai-ml';
+    const firstDomain = targetDomains[0] || 'web-dev';
     const domainLabel = availableDomains.find((d) => d.slug === firstDomain)?.label || 'DOMAIN';
 
     if (role === 'PRESIDENT') {
       setAddForm((prev) => ({ ...prev, position: 'President' }));
     } else if (role === 'VICE PRESIDENT') {
       setAddForm((prev) => ({ ...prev, position: 'Vice President' }));
-    } else if (role === 'TECH LEAD') {
-      setAddForm((prev) => ({ ...prev, position: 'Tech Lead' }));
-    } else if (role === 'NON-TECH LEAD') {
-      setAddForm((prev) => ({ ...prev, position: 'Non-Tech Lead' }));
+    } else if (role === 'GENERAL SECRETARY') {
+      setAddForm((prev) => ({ ...prev, position: 'General Secretary' }));
     } else if (role === 'LEAD') {
       setAddForm((prev) => ({ ...prev, position: `${domainLabel} Lead` }));
     } else if (role === 'ASST LEAD') {
@@ -1011,8 +1009,7 @@ export const AdminMembers: React.FC = () => {
                 >
                   <option value="PRESIDENT">PRESIDENT</option>
                   <option value="VICE PRESIDENT">VICE PRESIDENT</option>
-                  <option value="TECH LEAD">TECH LEAD</option>
-                  <option value="NON-TECH LEAD">NON-TECH LEAD</option>
+                  <option value="GENERAL SECRETARY">GENERAL SECRETARY</option>
                   <option value="LEAD">LEAD</option>
                   <option value="ASST LEAD">ASST LEAD</option>
                   <option value="MEMBER">MEMBER</option>
@@ -1036,7 +1033,7 @@ export const AdminMembers: React.FC = () => {
                 >
                   <Crown size={16} color="#f59e0b" />
                   <span>
-                    Executive role selected ({selectedRole}): Domain is automatically assigned as <strong>Executive</strong> (under President & Vice President).
+                    Executive role selected ({selectedRole}): Domain is automatically assigned as <strong>Executive</strong> (under President, Vice President & General Secretary).
                   </span>
                 </div>
               ) : (

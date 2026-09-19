@@ -64,7 +64,7 @@ LEETVERSE-WEBSITE/
 ## 🚀 Recent Updates & Enhancements
 
 - **Project External Links & Curved 3D Showcase:** Added end-to-end `link` attribute support across backend schemas, serializers, admin CRUD, card link triggers, and modals. Upgraded the project showcase to a top-anchored 3D cylindrical arc with mouse cursor tilt, wheel navigation, and vertically balanced mobile spacing.
-- **Hierarchical Admin Member Onboarding:** Implemented a two-step role selection flow — Executive roles (President, Vice President, Tech Lead, Non-Tech Lead) are domain-agnostic, while Lead, Asst Lead, and Member roles branch into domain selection with support for on-the-fly custom domain creation.
+- **Hierarchical Admin Member Onboarding & Multi-Domain Support:** Implemented a two-step role selection flow — Executive roles (President, Vice President, General Secretary) are domain-agnostic, while Lead, Asst Lead, and Member roles branch into multi-domain selection with custom domain creation and auto-distribution across domain directories.
 - **Gallery Inspect Theater & Pagination UX:** Added a dedicated Back button to the Inspect Theater, stabilized carousel arrows to eliminate cursor shift between page transitions, and made modal dimensions relative.
 - **Mascot Route Scoping & Audio:** Strictly scoped mascot announcements to their targeted page routes (e.g. project reminders only on `/projects`) and enabled sound effects by default.
 - **Mobile Viewport & Business Card Optimization:** Fixed mobile pinch-to-zoom issues by enforcing responsive navigation breakpoint toggles (`.desktop-nav` / `.mobile-nav-toggle`), zero-overflow viewport containment, and compact footer scaling on `/u/:username` digital business cards.

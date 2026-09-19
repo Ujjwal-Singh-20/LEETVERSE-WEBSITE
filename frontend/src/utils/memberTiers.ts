@@ -3,10 +3,8 @@ import { DomainGroup, PublicMember } from '../types';
 export type TierType =
   | 'president'
   | 'vice-president'
-  | 'tech-lead'
-  | 'tech-asst-lead'
-  | 'non-tech-lead'
-  | 'non-tech-asst-lead'
+  | 'general-secretary'
+  | 'joint-general-secretary'
   | 'domain-lead'
   | 'domain-asst-lead'
   | 'member';
@@ -20,7 +18,7 @@ export interface TierConfig {
   glowColor: string;
   bgSubtle: string;
   ringColor: string;
-  rank: number; // 1 = President, 2 = VP, 3 = Tech Lead, 4 = Tech Asst, 5 = Non-Tech Lead, 6 = Non-Tech Asst, 7 = Member
+  rank: number; // 1 = President, 2 = VP, 3 = Gen Sec, 4 = Joint Gen Sec, 5 = Domain Lead, 6 = Asst Lead, 7 = Member
 }
 
 export const TIER_CONFIGS: Record<TierType, TierConfig> = {
@@ -46,10 +44,10 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
     ringColor: '#c084fc',
     rank: 2,
   },
-  'tech-lead': {
-    type: 'tech-lead',
-    label: 'Tech Lead',
-    badge: 'TECH LEAD',
+  'general-secretary': {
+    type: 'general-secretary',
+    label: 'General Secretary',
+    badge: 'GENERAL SECRETARY',
     accentColor: '#00ff9d', // Cyber Neon Emerald
     borderColor: 'rgba(0, 255, 157, 0.8)',
     glowColor: 'rgba(0, 255, 157, 0.4)',
@@ -57,38 +55,16 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
     ringColor: '#00ff9d',
     rank: 3,
   },
-  'tech-asst-lead': {
-    type: 'tech-asst-lead',
-    label: 'Asst. Tech Lead',
-    badge: 'ASST. TECH LEAD',
+  'joint-general-secretary': {
+    type: 'joint-general-secretary',
+    label: 'Joint General Secretary',
+    badge: 'JOINT GENERAL SECRETARY',
     accentColor: '#06b6d4', // Electric Cyan
     borderColor: 'rgba(6, 182, 212, 0.8)',
     glowColor: 'rgba(6, 182, 212, 0.4)',
     bgSubtle: 'rgba(6, 182, 212, 0.08)',
     ringColor: '#22d3ee',
     rank: 4,
-  },
-  'non-tech-lead': {
-    type: 'non-tech-lead',
-    label: 'Non-Tech Lead',
-    badge: 'NON-TECH LEAD',
-    accentColor: '#f43f5e', // Sunset Rose / Coral
-    borderColor: 'rgba(244, 63, 94, 0.8)',
-    glowColor: 'rgba(244, 63, 94, 0.4)',
-    bgSubtle: 'rgba(244, 63, 94, 0.08)',
-    ringColor: '#fb7185',
-    rank: 5,
-  },
-  'non-tech-asst-lead': {
-    type: 'non-tech-asst-lead',
-    label: 'Asst. Non-Tech Lead',
-    badge: 'ASST. NON-TECH LEAD',
-    accentColor: '#fb7185', // Soft Pink / Coral
-    borderColor: 'rgba(251, 113, 133, 0.8)',
-    glowColor: 'rgba(251, 113, 133, 0.4)',
-    bgSubtle: 'rgba(251, 113, 133, 0.08)',
-    ringColor: '#fda4af',
-    rank: 6,
   },
   'domain-lead': {
     type: 'domain-lead',
@@ -99,7 +75,7 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
     glowColor: 'rgba(0, 255, 157, 0.18)',
     bgSubtle: 'rgba(0, 255, 157, 0.08)',
     ringColor: '#00ff9d',
-    rank: 7,
+    rank: 5,
   },
   'domain-asst-lead': {
     type: 'domain-asst-lead',
@@ -110,7 +86,7 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
     glowColor: 'rgba(79, 242, 174, 0.15)',
     bgSubtle: 'rgba(79, 242, 174, 0.06)',
     ringColor: '#4ff2ae',
-    rank: 8,
+    rank: 6,
   },
   member: {
     type: 'member',
@@ -121,27 +97,9 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
     glowColor: 'rgba(0, 255, 157, 0.08)',
     bgSubtle: 'rgba(79, 242, 174, 0.04)',
     ringColor: '#4ff2ae',
-    rank: 9,
+    rank: 7,
   },
 };
-
-// Recognized technical domain slugs
-export const TECH_DOMAINS = new Set([
-  'web-dev',
-  'web-development',
-  'ai-ml',
-  'aiml',
-  'app-dev',
-  'app-development',
-  'mobile-dev',
-  'cloud-devops',
-  'devops',
-  'cp-dsa',
-  'cp',
-  'dsa',
-  'cybersecurity',
-  'blockchain',
-]);
 
 // Standard dropdown position choices categorized for admin
 export const STANDARD_POSITIONS = [
@@ -150,8 +108,8 @@ export const STANDARD_POSITIONS = [
     positions: [
       'President',
       'Vice President',
-      'Tech Lead',
-      'Non-Tech Lead',
+      'General Secretary',
+      'Joint General Secretary',
     ],
   },
   {
@@ -186,6 +144,26 @@ export function getMemberTier(position: string = '', domainSlug?: string): TierC
     return TIER_CONFIGS['vice-president'];
   }
 
+  // 3. General Secretary & Joint General Secretary
+  if (
+    p.includes('general secretary') ||
+    p.includes('gen sec') ||
+    p.includes('gensec') ||
+    p.includes('secretary')
+  ) {
+    const isJoint =
+      p.includes('joint') ||
+      p.includes('asst') ||
+      p.includes('assistant') ||
+      p.includes('deputy') ||
+      p.includes('vice');
+
+    if (isJoint) {
+      return TIER_CONFIGS['joint-general-secretary'];
+    }
+    return TIER_CONFIGS['general-secretary'];
+  }
+
   // Assistant check
   const isAssistant =
     p.includes('asst') ||
@@ -194,38 +172,7 @@ export function getMemberTier(position: string = '', domainSlug?: string): TierC
     p.includes('deputy') ||
     p.includes('vice lead');
 
-  // 3. Society-level Non-Tech Lead (e.g. Non-Tech Lead, Head of Non-Tech)
-  if (
-    p.includes('non-tech') ||
-    p.includes('non tech') ||
-    p.includes('head of non-tech') ||
-    p.includes('non-tech director') ||
-    p.includes('creative director')
-  ) {
-    if (isAssistant) {
-      return TIER_CONFIGS['non-tech-asst-lead'];
-    }
-    return TIER_CONFIGS['non-tech-lead'];
-  }
-
-  // 4. Society-level Tech Lead (NOT all domain leads - only overall Tech Leads)
-  if (
-    (!p.includes('non-tech') && !p.includes('non tech')) &&
-    (
-      p.includes('tech lead') ||
-      p.includes('technical lead') ||
-      p.includes('cto') ||
-      p.includes('head of tech') ||
-      p.includes('tech director')
-    )
-  ) {
-    if (isAssistant) {
-      return TIER_CONFIGS['tech-asst-lead'];
-    }
-    return TIER_CONFIGS['tech-lead'];
-  }
-
-  // 5. Domain-level Leads & Assistant Leads
+  // 4. Domain-level Leads & Assistant Leads
   const isLead =
     p.includes('lead') ||
     p.includes('head') ||
@@ -239,7 +186,7 @@ export function getMemberTier(position: string = '', domainSlug?: string): TierC
     return TIER_CONFIGS['domain-lead'];
   }
 
-  // 6. Regular Member
+  // 5. Regular Member
   return TIER_CONFIGS['member'];
 }
 
@@ -252,8 +199,7 @@ export interface HierarchyMember extends PublicMember {
 export interface HierarchyGroups {
   presidents: HierarchyMember[];
   vicePresidents: HierarchyMember[];
-  techLeads: HierarchyMember[];
-  nonTechLeads: HierarchyMember[];
+  generalSecretaries: HierarchyMember[];
   domainGroups: DomainGroup[];
 }
 
@@ -261,10 +207,8 @@ export function isExecutiveTier(tierType: TierType): boolean {
   return (
     tierType === 'president' ||
     tierType === 'vice-president' ||
-    tierType === 'tech-lead' ||
-    tierType === 'tech-asst-lead' ||
-    tierType === 'non-tech-lead' ||
-    tierType === 'non-tech-asst-lead'
+    tierType === 'general-secretary' ||
+    tierType === 'joint-general-secretary'
   );
 }
 
@@ -274,8 +218,7 @@ export function isExecutiveTier(tierType: TierType): boolean {
 export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups {
   const presidents: HierarchyMember[] = [];
   const vicePresidents: HierarchyMember[] = [];
-  const techLeads: HierarchyMember[] = [];
-  const nonTechLeads: HierarchyMember[] = [];
+  const generalSecretaries: HierarchyMember[] = [];
 
   const seenLeadership = new Set<string>();
 
@@ -310,23 +253,20 @@ export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups
           seenLeadership.add(m.username);
           vicePresidents.push(hierarchyMember);
         }
-      } else if (tier.type === 'tech-lead' || tier.type === 'tech-asst-lead') {
+      } else if (
+        tier.type === 'general-secretary' ||
+        tier.type === 'joint-general-secretary'
+      ) {
         if (!seenLeadership.has(m.username)) {
           seenLeadership.add(m.username);
-          techLeads.push(hierarchyMember);
-        }
-      } else if (tier.type === 'non-tech-lead' || tier.type === 'non-tech-asst-lead') {
-        if (!seenLeadership.has(m.username)) {
-          seenLeadership.add(m.username);
-          nonTechLeads.push(hierarchyMember);
+          generalSecretaries.push(hierarchyMember);
         }
       }
     });
   });
 
-  // Sort Tech Leads and Non-Tech Leads so Leads come before Asst. Leads
-  techLeads.sort((a, b) => a.tier.rank - b.tier.rank);
-  nonTechLeads.sort((a, b) => a.tier.rank - b.tier.rank);
+  // Sort General Secretaries so General Secretary comes before Joint General Secretary
+  generalSecretaries.sort((a, b) => a.tier.rank - b.tier.rank);
 
   // Filter out pure executive/leadership domains from the regular domain cards list if they only hold executive heads
   const filteredDomainGroups = dedupedDomains.filter((d) => {
@@ -344,8 +284,7 @@ export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups
   return {
     presidents,
     vicePresidents,
-    techLeads,
-    nonTechLeads,
+    generalSecretaries,
     domainGroups: filteredDomainGroups,
   };
 }
