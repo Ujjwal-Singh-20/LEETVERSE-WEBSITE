@@ -49,7 +49,7 @@ export const Footer: React.FC = () => {
           {/* Social Links */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <a
-              href="https://github.com/leetverse"
+              href="https://github.com/Chetan-Kedia/LeetVerse"
               target="_blank"
               rel="noreferrer"
               aria-label="GitHub"
