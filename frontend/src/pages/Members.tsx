@@ -268,7 +268,7 @@ const MemberCard: React.FC<{
           </div>
 
           {/* Member Position */}
-          <div
+          {/* <div
             style={{
               fontSize: '0.88rem',
               color: tier.accentColor,
@@ -280,7 +280,7 @@ const MemberCard: React.FC<{
             }}
           >
             {member.position}
-          </div>
+          </div> */}
 
           {/* Tier Badge */}
           <span
