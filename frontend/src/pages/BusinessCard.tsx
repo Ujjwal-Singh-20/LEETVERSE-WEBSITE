@@ -317,7 +317,7 @@ export const BusinessCard: React.FC = () => {
             {member.position}
           </div>
 
-          {tier.type !== 'member' && (
+          {/* {tier.type !== 'member' && (
             <div style={{ marginBottom: '10px' }}>
               <span
                 className="mono-tag"
@@ -335,7 +335,7 @@ export const BusinessCard: React.FC = () => {
                 {tier.badge}
               </span>
             </div>
-          )}
+          )} */}
 
           {member.domains && member.domains.length > 0 && member.domains[0] !== 'executive' && (
             <div
