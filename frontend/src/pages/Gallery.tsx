@@ -124,12 +124,12 @@ export const Gallery: React.FC = () => {
               gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(280px, 32vw, 440px), 1fr))',
               gap: 'clamp(28px, 4vw, 56px)',
               alignItems: 'center',
-              background: 'radial-gradient(ellipse at center, rgba(14, 34, 24, 0.6) 0%, rgba(6, 13, 10, 0.85) 100%)',
-              border: '1px solid rgba(0, 255, 157, 0.18)',
+              background: 'var(--bg-glass)',
+              border: '1px solid var(--accent-border-subtle)',
               borderRadius: 'var(--radius-lg)',
               padding: 'clamp(24px, 4vw, 44px)',
               marginBottom: '64px',
-              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7), 0 0 35px rgba(0, 255, 157, 0.08)',
+              boxShadow: '0 16px 45px rgba(0, 0, 0, 0.5)',
               position: 'relative',
               overflow: 'hidden',
             }}
@@ -449,17 +449,17 @@ export const Gallery: React.FC = () => {
                   letterSpacing: '0.5px',
                   padding: '11px 22px',
                   borderRadius: '999px',
-                  boxShadow: '0 6px 30px rgba(0, 255, 157, 0.4), 0 2px 10px rgba(0, 0, 0, 0.9)',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#00ff9d';
-                  e.currentTarget.style.color = '#06120b';
-                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.background = 'var(--accent-primary)';
+                  e.currentTarget.style.color = '#0b0f17';
+                  e.currentTarget.style.transform = 'scale(1.03)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#07160e';
+                  e.currentTarget.style.background = 'var(--bg-surface)';
                   e.currentTarget.style.color = '#ffffff';
                   e.currentTarget.style.transform = 'scale(1)';
                 }}

@@ -363,16 +363,16 @@ export const BracketBuddy: React.FC = () => {
               marginBottom: '10px',
               maxWidth: '240px',
               minWidth: '180px',
-              background: '#0d1f16',
-              color: '#baffdd',
-              border: '1px solid rgba(61, 255, 160, 0.55)',
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--accent-border-subtle)',
               borderRadius: '10px',
               padding: '8px 12px',
               fontFamily: 'var(--font-mono)',
               fontSize: '11px',
               lineHeight: '1.4',
               textAlign: 'center',
-              boxShadow: '0 0 16px rgba(61, 255, 160, 0.25)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
               whiteSpace: 'normal',
               pointerEvents: 'none',
               animation: 'bubble-pop 0.25s ease-out',
@@ -521,16 +521,16 @@ export const BracketBuddy: React.FC = () => {
               marginBottom: '10px',
               maxWidth: '240px',
               minWidth: '170px',
-              background: '#0d1f16',
-              color: '#baffdd',
-              border: '1px solid rgba(61, 255, 160, 0.55)',
+              background: 'var(--bg-card)',
+              color: 'var(--text-primary)',
+              border: '1px solid var(--accent-border-subtle)',
               borderRadius: '10px',
               padding: '8px 12px',
               fontFamily: 'var(--font-mono)',
               fontSize: '11px',
               lineHeight: '1.4',
               textAlign: 'center',
-              boxShadow: '0 0 16px rgba(61, 255, 160, 0.25)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.45)',
               whiteSpace: 'normal',
               pointerEvents: 'none',
               animation: 'bubble-pop 0.2s ease-out',
@@ -556,46 +556,38 @@ export const BracketBuddy: React.FC = () => {
                 left: '50%',
                 transform: 'translateX(-50%)',
                 border: '6px solid transparent',
-                borderTopColor: '#0d1f16',
+                borderTopColor: 'var(--bg-card)',
               }}
             />
           </div>
         )}
 
-        {/* ASCII SVG with soft idle glow breathe only */}
+        {/* ASCII SVG with crisp pastel rendering (no radioactive glow) */}
         <div style={{ pointerEvents: 'auto' }}>
           <svg
-            style={{
-              filter: 'drop-shadow(0 0 6px rgba(60, 255, 150, 0.55))',
-              animation: 'glow-breathe 2.6s ease-in-out infinite',
-            }}
             viewBox="0 0 150 130"
             width="150"
             height="130"
           >
-            <text className="ascii-line" x="75" y="26" fontSize="19" fontFamily="monospace" fill="#3dffa0" textAnchor="middle">
+            <text className="ascii-line" x="75" y="26" fontSize="19" fontFamily="monospace" fill="var(--accent-primary)" textAnchor="middle">
               {expr.head}
             </text>
-            <text className="ascii-line" x="75" y="50" fontSize="19" fontFamily="monospace" fill="#3dffa0" textAnchor="middle">
+            <text className="ascii-line" x="75" y="50" fontSize="19" fontFamily="monospace" fill="var(--accent-primary)" textAnchor="middle">
               {expr.face}
             </text>
-            <text className="ascii-line" x="75" y="76" fontSize="19" fontFamily="monospace" fill="#3dffa0" textAnchor="middle">
+            <text className="ascii-line" x="75" y="76" fontSize="19" fontFamily="monospace" fill="var(--accent-primary)" textAnchor="middle">
               {expr.torso}
             </text>
-            <text className="ascii-line" x="58" y="104" fontSize="19" fontFamily="monospace" fill="#3dffa0" textAnchor="middle">
+            <text className="ascii-line" x="58" y="104" fontSize="19" fontFamily="monospace" fill="var(--accent-primary)" textAnchor="middle">
               /_/
             </text>
-            <text className="ascii-line" x="92" y="104" fontSize="19" fontFamily="monospace" fill="#3dffa0" textAnchor="middle">
+            <text className="ascii-line" x="92" y="104" fontSize="19" fontFamily="monospace" fill="var(--accent-primary)" textAnchor="middle">
               \_\
             </text>
           </svg>
         </div>
 
         <style>{`
-          @keyframes glow-breathe {
-            0%, 100% { filter: drop-shadow(0 0 4px rgba(60, 255, 150, 0.45)); }
-            50%      { filter: drop-shadow(0 0 10px rgba(60, 255, 150, 0.85)); }
-          }
           @keyframes bubble-pop {
             from { opacity: 0; transform: translateX(-50%) scale(0.95); }
             to   { opacity: 1; transform: translateX(-50%) scale(1); }

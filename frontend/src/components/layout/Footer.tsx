@@ -9,8 +9,8 @@ export const Footer: React.FC = () => {
   return (
     <footer
       style={{
-        borderTop: '1px solid rgba(61, 255, 160, 0.1)',
-        backgroundColor: '#040907',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+        backgroundColor: 'var(--bg-color)',
         padding: isBusinessCard ? '24px 0 20px' : 'clamp(30px, 4.5vh, 48px) 0 clamp(18px, 2.5vh, 32px)',
         marginTop: isBusinessCard ? '24px' : 'clamp(36px, 5vh, 70px)',
         position: 'relative',
@@ -37,7 +37,6 @@ export const Footer: React.FC = () => {
                 height: isBusinessCard ? '24px' : '28px',
                 objectFit: 'contain',
                 display: 'block',
-                filter: 'drop-shadow(0 0 6px rgba(0, 255, 157, 0.35))',
               }}
             />
             <span className="wordmark" style={{ fontSize: isBusinessCard ? '1.25rem' : 'clamp(1.2rem, 1.8vw, 1.5rem)' }}>

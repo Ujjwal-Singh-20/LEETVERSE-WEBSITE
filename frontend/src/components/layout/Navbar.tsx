@@ -42,16 +42,16 @@ export const Navbar: React.FC = () => {
         zIndex: 900,
         transition: 'background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease',
         background: scrolled
-          ? 'rgba(6, 13, 10, 0.94)'
-          : 'rgba(6, 13, 10, 0.82)',
+          ? 'rgba(11, 15, 23, 0.94)'
+          : 'rgba(11, 15, 23, 0.82)',
         backdropFilter: scrolled ? 'blur(20px)' : 'blur(14px)',
         WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'blur(14px)',
         borderBottom: scrolled
-          ? '1px solid rgba(61, 255, 160, 0.18)'
-          : '1px solid rgba(61, 255, 160, 0.08)',
+          ? '1px solid rgba(255, 255, 255, 0.08)'
+          : '1px solid rgba(255, 255, 255, 0.04)',
         boxShadow: scrolled
-          ? '0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 1px 0 0 rgba(61, 255, 160, 0.1)'
-          : '0 4px 20px -4px rgba(0, 0, 0, 0.5)',
+          ? '0 10px 30px -10px rgba(0, 0, 0, 0.6)'
+          : '0 4px 20px -4px rgba(0, 0, 0, 0.4)',
       }}
     >
       <div
@@ -81,7 +81,6 @@ export const Navbar: React.FC = () => {
               height: '34px',
               objectFit: 'contain',
               display: 'block',
-              filter: 'drop-shadow(0 0 8px rgba(0, 255, 157, 0.45))',
             }}
           />
           <span className="wordmark" style={{ fontSize: 'clamp(1.3rem, 2vw, 1.6rem)' }}>
@@ -126,7 +125,6 @@ export const Navbar: React.FC = () => {
                       height: '2.5px',
                       background: 'var(--accent-primary)',
                       borderRadius: '2px',
-                      boxShadow: '0 0 10px var(--accent-glow)',
                     }}
                   />
                 )}

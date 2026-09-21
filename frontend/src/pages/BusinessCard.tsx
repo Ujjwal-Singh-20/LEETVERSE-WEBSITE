@@ -144,21 +144,6 @@ export const BusinessCard: React.FC = () => {
         maxWidth: '100vw',
       }}
     >
-      {/* Background Soft Glow matching Member Tier */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 'min(480px, 90vw)',
-          height: 'min(480px, 90vw)',
-          background: `radial-gradient(circle, ${tier.glowColor} 0%, transparent 70%)`,
-          pointerEvents: 'none',
-          transition: 'all var(--transition-smooth)',
-        }}
-      />
-
       {/* Top back navigation */}
       <div style={{ maxWidth: 'min(92vw, 460px)', width: '100%', marginBottom: '16px' }}>
         <Link
@@ -189,7 +174,7 @@ export const BusinessCard: React.FC = () => {
           borderRadius: 'var(--radius-lg)',
           position: 'relative',
           border: `1.5px solid ${tier.borderColor}`,
-          boxShadow: `0 20px 50px rgba(0, 0, 0, 0.6), 0 0 35px ${tier.glowColor}`,
+          boxShadow: '0 16px 45px rgba(0, 0, 0, 0.5)',
           overflow: 'hidden',
           transition: 'border-color var(--transition-smooth), box-shadow var(--transition-smooth)',
         }}
@@ -253,24 +238,7 @@ export const BusinessCard: React.FC = () => {
               justifyContent: 'center',
             }}
           >
-            {/* Ambient Blurred Photo Glow emitting outward */}
-            <div
-              className="photo-ambient-glow"
-              style={{
-                position: 'absolute',
-                inset: '-12px',
-                borderRadius: '50%',
-                background: member.photoUrl
-                  ? `url("${member.photoUrl}") center/cover no-repeat`
-                  : `radial-gradient(circle, ${tier.glowColor} 0%, rgba(18, 42, 30, 0.8) 70%)`,
-                filter: 'blur(20px)',
-                opacity: 0.85,
-                pointerEvents: 'none',
-                zIndex: 0,
-              }}
-            />
-
-            {/* Sharp Foreground Avatar with Tier Colored Ring & Static Glow */}
+            {/* Foreground Avatar with Clean Tier Ring */}
             <div
               className="mc-ring"
               style={{
@@ -281,7 +249,7 @@ export const BusinessCard: React.FC = () => {
                 borderRadius: '50%',
                 background: member.photoUrl
                   ? `url("${member.photoUrl}") center/cover no-repeat`
-                  : 'linear-gradient(135deg, #122a1e 0%, #204b36 100%)',
+                  : 'linear-gradient(135deg, #0e2218 0%, #173826 100%)',
                 border: `2px solid ${tier.ringColor}`,
                 display: 'flex',
                 alignItems: 'center',

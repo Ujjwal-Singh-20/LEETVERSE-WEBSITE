@@ -90,9 +90,9 @@ export const NotFound: React.FC = () => {
           width: '100%',
           textAlign: 'center',
           borderRadius: '24px',
-          border: '1px solid rgba(0, 255, 157, 0.3)',
-          background: 'rgba(10, 23, 17, 0.75)',
-          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 255, 157, 0.08)',
+          border: '1px solid var(--accent-border-subtle)',
+          background: 'var(--bg-glass)',
+          boxShadow: '0 20px 50px rgba(0, 0, 0, 0.45)',
           backdropFilter: 'blur(16px)',
         }}
       >
@@ -114,7 +114,6 @@ export const NotFound: React.FC = () => {
               color: 'var(--accent-primary)',
               fontWeight: 300,
               lineHeight: 1,
-              textShadow: '0 0 25px rgba(0, 255, 157, 0.6)',
             }}
           >
             [
@@ -128,7 +127,6 @@ export const NotFound: React.FC = () => {
               lineHeight: 1,
               letterSpacing: '-2px',
               color: '#ffffff',
-              textShadow: '0 0 35px rgba(0, 255, 157, 0.25)',
             }}
           >
             404
@@ -141,7 +139,6 @@ export const NotFound: React.FC = () => {
               color: 'var(--accent-primary)',
               fontWeight: 300,
               lineHeight: 1,
-              textShadow: '0 0 25px rgba(0, 255, 157, 0.6)',
             }}
           >
             ]

@@ -80,13 +80,12 @@ export const TriangleMeshBackground: React.FC = () => {
           const i3 = (r + 1) * (cols + 1) + c;
           const i4 = i3 + 1;
 
-          // Color palette matching the deep forest green shades in the user's reference image
-          // R: 8-16, G: 25-45, B: 18-32
+          // Organic deep forest and cypress shades
           const getGreenShade = () => {
             const variant = Math.random();
-            const r = Math.floor(7 + variant * 10);
-            const g = Math.floor(22 + variant * 26);
-            const b = Math.floor(14 + variant * 18);
+            const r = Math.floor(6 + variant * 7);
+            const g = Math.floor(18 + variant * 18);
+            const b = Math.floor(12 + variant * 12);
             return { r, g, b };
           };
 
@@ -219,41 +218,23 @@ export const TriangleMeshBackground: React.FC = () => {
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.fill();
 
-        // Dark wireframe edges matching the reference image
+        // Subtle natural wireframe edges
         if (illumination > 0.05) {
-          ctx.strokeStyle = `rgba(61, 255, 160, ${0.12 + illumination * 0.35})`;
-          ctx.lineWidth = 0.9;
-        } else {
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+          ctx.strokeStyle = `rgba(110, 231, 183, ${0.05 + illumination * 0.14})`;
           ctx.lineWidth = 0.8;
+        } else {
+          ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+          ctx.lineWidth = 0.7;
         }
         ctx.stroke();
       }
 
-      // Draw the glowing cursor dot exactly as seen in the user's reference image
+      // Draw clean subtle mint cursor dot (zero neon glow aura)
       if (mouse.active) {
-        // Outer soft glow
-        const glowGradient = ctx.createRadialGradient(
-          mouse.x, mouse.y, 0,
-          mouse.x, mouse.y, 30
-        );
-        glowGradient.addColorStop(0, 'rgba(61, 255, 160, 0.45)');
-        glowGradient.addColorStop(0.5, 'rgba(61, 255, 160, 0.15)');
-        glowGradient.addColorStop(1, 'rgba(61, 255, 160, 0)');
-
         ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 30, 0, Math.PI * 2);
-        ctx.fillStyle = glowGradient;
+        ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(110, 231, 183, 0.7)';
         ctx.fill();
-
-        // Inner glowing bead (semi-transparent soft white/mint circle from the screenshot)
-        ctx.beginPath();
-        ctx.arc(mouse.x, mouse.y, 7, 0, Math.PI * 2);
-        ctx.fillStyle = '#d4fcef';
-        ctx.shadowColor = '#3dffa0';
-        ctx.shadowBlur = 12;
-        ctx.fill();
-        ctx.shadowBlur = 0; // reset
       }
 
       animId = requestAnimationFrame(render);

@@ -348,18 +348,18 @@ export const Projects: React.FC = () => {
                       ? 'none'
                       : 'transform 0.22s cubic-bezier(0.2, 0, 0.2, 1), border-color 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease',
                     border: isCenterFocus
-                      ? '1.5px solid rgba(0, 255, 157, 0.7)'
+                      ? '1.5px solid var(--accent-border)'
                       : isHovered
-                        ? '1.5px solid rgba(0, 255, 157, 0.5)'
+                        ? '1.5px solid var(--accent-border)'
                         : '1px solid var(--accent-border-subtle)',
                     background: isCenterFocus
-                      ? 'rgba(15, 36, 26, 0.88)'
-                      : 'rgba(11, 26, 18, 0.8)',
+                      ? 'var(--bg-glass-hover)'
+                      : 'var(--bg-glass)',
                     boxShadow: isCenterFocus
-                      ? '0 25px 60px rgba(0, 0, 0, 0.75), 0 0 35px rgba(0, 255, 157, 0.25)'
+                      ? '0 25px 55px rgba(0, 0, 0, 0.6)'
                       : isHovered
-                        ? '0 20px 45px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 255, 157, 0.15)'
-                        : '0 12px 35px rgba(0, 0, 0, 0.5)',
+                        ? '0 18px 40px rgba(0, 0, 0, 0.5)'
+                        : '0 10px 28px rgba(0, 0, 0, 0.35)',
                     opacity: opacity,
                     willChange: 'transform',
                   }}
@@ -414,7 +414,6 @@ export const Projects: React.FC = () => {
                         fontWeight: 700,
                         color: isCenterFocus ? '#ffffff' : 'var(--text-primary)',
                         marginBottom: '10px',
-                        textShadow: isCenterFocus ? '0 0 15px rgba(0, 255, 157, 0.3)' : 'none',
                       }}
                     >
                       {project.title}
@@ -560,11 +559,9 @@ export const Projects: React.FC = () => {
               maxHeight: 'min(84vh, 760px)',
               overflowY: 'auto',
               borderRadius: 'var(--radius-lg)',
-              padding: 'clamp(20px, 2.5vw, 30px)',
-              position: 'relative',
-              background: '#0d1f16',
+              background: 'var(--bg-card)',
               border: '1px solid var(--accent-border)',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 35px rgba(0, 255, 157, 0.1)',
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
             }}
           >
             {/* Close Button */}

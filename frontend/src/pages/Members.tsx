@@ -166,20 +166,20 @@ const MemberCard: React.FC<{
         textDecoration: 'none',
         borderRadius: 'var(--radius-lg)',
         border: `1.5px solid ${tier.borderColor}`,
-        boxShadow: `0 14px 34px rgba(0, 0, 0, 0.45), 0 0 22px ${tier.glowColor}`,
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
         transition: 'transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast)',
-        backgroundColor: '#0a1711',
+        backgroundColor: 'var(--bg-card)',
         overflow: 'hidden',
         minHeight: '160px',
         cursor: 'pointer',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'translateY(-4px)';
-        e.currentTarget.style.boxShadow = `0 20px 45px rgba(0, 0, 0, 0.6), 0 0 32px ${tier.glowColor}`;
+        e.currentTarget.style.boxShadow = '0 14px 35px rgba(0, 0, 0, 0.45)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.transform = 'none';
-        e.currentTarget.style.boxShadow = `0 14px 34px rgba(0, 0, 0, 0.45), 0 0 22px ${tier.glowColor}`;
+        e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.35)';
       }}
     >
       {/* Left ~38-40% Photo Column */}
@@ -191,7 +191,7 @@ const MemberCard: React.FC<{
           flexShrink: 0,
           position: 'relative',
           overflow: 'hidden',
-          backgroundColor: '#060f0a',
+          backgroundColor: 'var(--bg-surface)',
           borderRight: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
@@ -217,7 +217,7 @@ const MemberCard: React.FC<{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              background: 'linear-gradient(135deg, #0d2116 0%, #173826 100%)',
+              background: 'linear-gradient(135deg, #0e2218 0%, #153526 100%)',
               fontSize: '2.2rem',
               fontWeight: 800,
               color: tier.accentColor,
@@ -312,10 +312,10 @@ const MemberCard: React.FC<{
                   key={d}
                   style={{
                     fontSize: '9.5px',
-                    padding: '1px 6px',
-                    borderRadius: '3px',
-                    background: 'rgba(0, 255, 157, 0.05)',
-                    border: '1px solid rgba(0, 255, 157, 0.2)',
+                    padding: '2px 8px',
+                    borderRadius: '4px',
+                    background: 'rgba(110, 231, 183, 0.08)',
+                    border: '1px solid rgba(110, 231, 183, 0.22)',
                     color: 'var(--text-accent)',
                     fontFamily: 'var(--font-mono)',
                     fontWeight: 600,
@@ -927,7 +927,7 @@ export const Members: React.FC = () => {
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         border: '1px solid rgba(0, 255, 157, 0.14)',
-                        backgroundColor: '#0a1711',
+                        backgroundColor: 'var(--bg-card)',
                         transition: 'all var(--transition-smooth)',
                         position: 'relative',
                         overflow: 'hidden',
@@ -935,11 +935,11 @@ export const Members: React.FC = () => {
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-6px)';
                         e.currentTarget.style.borderColor = 'var(--accent-primary)';
-                        e.currentTarget.style.boxShadow = '0 18px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 255, 157, 0.16)';
+                        e.currentTarget.style.boxShadow = '0 14px 35px rgba(0, 0, 0, 0.45)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'none';
-                        e.currentTarget.style.borderColor = 'rgba(0, 255, 157, 0.14)';
+                        e.currentTarget.style.borderColor = 'var(--accent-border-subtle)';
                         e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
@@ -1107,14 +1107,14 @@ export const Members: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: '#09150f',
-              border: '1.5px solid rgba(0, 255, 157, 0.25)',
+              border: '1.5px solid var(--accent-border)',
               borderRadius: 'var(--radius-lg)',
               maxWidth: 'min(92vw, 860px)',
               width: '100%',
               maxHeight: 'min(84vh, 760px)',
               display: 'flex',
               flexDirection: 'column',
-              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.8), 0 0 32px rgba(0, 255, 157, 0.12)',
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
               overflow: 'hidden',
               animation: 'scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
