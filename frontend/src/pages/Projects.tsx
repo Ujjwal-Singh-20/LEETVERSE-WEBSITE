@@ -479,50 +479,58 @@ export const Projects: React.FC = () => {
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {project.link && (
+                        {project.link ? (
                           <a
                             href={project.link}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            title="Open project in new tab"
+                            title="Inspect project in new tab"
                             style={{
+                              fontSize: '0.9rem',
+                              fontWeight: 600,
+                              color: 'var(--accent-primary)',
                               display: 'inline-flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              width: '28px',
-                              height: '28px',
-                              borderRadius: '50%',
-                              background: 'rgba(0, 255, 157, 0.15)',
-                              border: '1px solid rgba(0, 255, 157, 0.4)',
-                              color: 'var(--accent-primary)',
-                              transition: 'all 0.2s ease',
+                              gap: '5px',
+                              textDecoration: 'none',
+                              cursor: 'pointer',
+                              transition: 'color var(--transition-fast), transform var(--transition-fast)',
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.background = '#00ff9d';
-                              e.currentTarget.style.color = '#040907';
+                              e.currentTarget.style.color = '#ffffff';
+                              e.currentTarget.style.transform = 'translateY(-1px)';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.background = 'rgba(0, 255, 157, 0.15)';
                               e.currentTarget.style.color = 'var(--accent-primary)';
+                              e.currentTarget.style.transform = 'none';
                             }}
                           >
-                            <ExternalLink size={13} />
+                            Inspect <ExternalLink size={14} />
                           </a>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveProject(project);
+                              setActiveImageIndex(0);
+                            }}
+                            style={{
+                              fontSize: '0.9rem',
+                              fontWeight: 600,
+                              color: 'var(--accent-primary)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              cursor: 'pointer',
+                              background: 'none',
+                              border: 'none',
+                              padding: 0,
+                            }}
+                          >
+                            Inspect <ExternalLink size={14} />
+                          </button>
                         )}
-
-                        <span
-                          style={{
-                            fontSize: '0.9rem',
-                            fontWeight: 600,
-                            color: 'var(--accent-primary)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          Inspect <ExternalLink size={14} />
-                        </span>
                       </div>
                     </div>
                   </div>
@@ -554,11 +562,13 @@ export const Projects: React.FC = () => {
             onClick={(e) => e.stopPropagation()}
             className="glass-panel"
             style={{
+              position: 'relative',
               width: '100%',
               maxWidth: 'min(92vw, 760px)',
               maxHeight: 'min(84vh, 760px)',
               overflowY: 'auto',
               borderRadius: 'var(--radius-lg)',
+              padding: 'clamp(24px, 3.5vw, 36px)',
               background: 'var(--bg-card)',
               border: '1px solid var(--accent-border)',
               boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
