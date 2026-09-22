@@ -151,7 +151,16 @@ export const TriangleMeshBackground: React.FC = () => {
 
     initMesh();
 
+    const checkIsMobile = () =>
+      typeof window !== 'undefined' &&
+      (window.innerWidth < 768 ||
+        window.matchMedia('(pointer: coarse)').matches ||
+        'ontouchstart' in window);
+
+    let isMobile = checkIsMobile();
+
     const handlePointerMove = (e: PointerEvent) => {
+      if (isMobile || e.pointerType === 'touch') return;
       mouse.targetX = e.clientX;
       mouse.targetY = e.clientY;
       mouse.active = true;
@@ -165,6 +174,7 @@ export const TriangleMeshBackground: React.FC = () => {
       if (!canvas) return;
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
+      isMobile = checkIsMobile();
       initMesh();
     };
 
@@ -173,9 +183,11 @@ export const TriangleMeshBackground: React.FC = () => {
     window.addEventListener('resize', handleResize);
 
     const render = () => {
-      // Smooth cursor interpolation
-      mouse.x += (mouse.targetX - mouse.x) * 0.12;
-      mouse.y += (mouse.targetY - mouse.y) * 0.12;
+      // Smooth cursor interpolation (desktop only)
+      if (!isMobile) {
+        mouse.x += (mouse.targetX - mouse.x) * 0.12;
+        mouse.y += (mouse.targetY - mouse.y) * 0.12;
+      }
 
       // Base background clear
       ctx.fillStyle = '#060d0a';
@@ -189,19 +201,21 @@ export const TriangleMeshBackground: React.FC = () => {
         if (Math.abs(p.y - p.origY) > 6) p.vy *= -1;
       }
 
-      // Draw triangles with dynamic cursor illumination
+      // Draw triangles: uniform cohesive lighting on mobile, interactive cursor spotlight on desktop
       const numTriangles = triangles.length;
       for (let i = 0; i < numTriangles; i++) {
         const tri = triangles[i];
         tri.centroid.x = (tri.p1.x + tri.p2.x + tri.p3.x) / 3;
         tri.centroid.y = (tri.p1.y + tri.p2.y + tri.p3.y) / 3;
 
-        const dist = Math.hypot(tri.centroid.x - mouse.x, tri.centroid.y - mouse.y);
         let illumination = 0;
 
-        if (dist < mouse.radius) {
-          // Smooth bell falloff
-          illumination = Math.pow(1 - dist / mouse.radius, 1.8);
+        if (!isMobile) {
+          const dist = Math.hypot(tri.centroid.x - mouse.x, tri.centroid.y - mouse.y);
+          if (dist < mouse.radius) {
+            // Smooth bell falloff for desktop cursor
+            illumination = Math.pow(1 - dist / mouse.radius, 1.8);
+          }
         }
 
         // Color boost when illuminated: shifts towards bright mint/emerald green
@@ -218,19 +232,19 @@ export const TriangleMeshBackground: React.FC = () => {
         ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
         ctx.fill();
 
-        // Subtle natural wireframe edges
-        if (illumination > 0.05) {
+        // Subtle natural wireframe edges (uniform on mobile, highlighted around cursor on desktop)
+        if (!isMobile && illumination > 0.05) {
           ctx.strokeStyle = `rgba(110, 231, 183, ${0.05 + illumination * 0.14})`;
           ctx.lineWidth = 0.8;
         } else {
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+          ctx.strokeStyle = isMobile ? 'rgba(110, 231, 183, 0.07)' : 'rgba(0, 0, 0, 0.35)';
           ctx.lineWidth = 0.7;
         }
         ctx.stroke();
       }
 
-      // Draw clean subtle mint cursor dot (zero neon glow aura)
-      if (mouse.active) {
+      // Draw clean subtle mint cursor dot (desktop only, zero neon glow aura)
+      if (!isMobile && mouse.active) {
         ctx.beginPath();
         ctx.arc(mouse.x, mouse.y, 4, 0, Math.PI * 2);
         ctx.fillStyle = 'rgba(110, 231, 183, 0.7)';

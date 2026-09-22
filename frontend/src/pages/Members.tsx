@@ -157,7 +157,7 @@ const MemberCard: React.FC<{
           navigate(`/u/${member.username}`);
         }
       }}
-      className="glass-panel"
+      className="glass-panel member-card-container"
       style={{
         display: 'flex',
         flexDirection: 'row',
@@ -170,7 +170,7 @@ const MemberCard: React.FC<{
         transition: 'transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast)',
         backgroundColor: 'var(--bg-card)',
         overflow: 'hidden',
-        minHeight: '178px',
+        minHeight: '175px',
         cursor: 'pointer',
       }}
       onMouseEnter={(e) => {
@@ -184,10 +184,11 @@ const MemberCard: React.FC<{
     >
       {/* Left Photo Column - stretches to match right column height without constraining */}
       <div
+        className="member-card-photo-col"
         style={{
-          width: '36%',
-          minWidth: '115px',
-          maxWidth: isPresident ? '175px' : '145px',
+          width: '34%',
+          minWidth: '95px',
+          maxWidth: isPresident ? '170px' : '135px',
           flexShrink: 0,
           position: 'relative',
           overflow: 'hidden',
@@ -243,17 +244,17 @@ const MemberCard: React.FC<{
 
       {/* Right Column Details */}
       <div
+        className="member-card-details-col"
         style={{
           flex: 1,
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
-          padding: '16px 16px 14px',
+          padding: '14px 14px 12px',
         }}
       >
         {/* Top Info */}
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           {/* Member Name */}
           <div
             style={{
@@ -352,15 +353,17 @@ const MemberCard: React.FC<{
 
         {/* Card Footer */}
         <div
+          className="member-card-footer"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginTop: '10px',
+            marginTop: 'auto',
             paddingTop: '8px',
             borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            gap: '8px',
+            gap: '6px',
             flexShrink: 0,
+            width: '100%',
           }}
         >
           <span
@@ -385,7 +388,7 @@ const MemberCard: React.FC<{
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '5px',
                 flexShrink: 0,
                 position: 'relative',
                 zIndex: 2,
@@ -411,6 +414,7 @@ const MemberCard: React.FC<{
                     border: '1px solid rgba(255, 255, 255, 0.15)',
                     color: 'var(--text-secondary)',
                     transition: 'all var(--transition-fast)',
+                    flexShrink: 0,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = tier.accentColor;
@@ -447,6 +451,7 @@ const MemberCard: React.FC<{
                     border: '1px solid rgba(255, 255, 255, 0.15)',
                     color: 'var(--text-secondary)',
                     transition: 'all var(--transition-fast)',
+                    flexShrink: 0,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = tier.accentColor;
@@ -483,6 +488,7 @@ const MemberCard: React.FC<{
                     border: '1px solid rgba(255, 255, 255, 0.15)',
                     color: 'var(--text-secondary)',
                     transition: 'all var(--transition-fast)',
+                    flexShrink: 0,
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.borderColor = tier.accentColor;
@@ -1094,6 +1100,7 @@ export const Members: React.FC = () => {
       {/* DOMAIN MEMBERS POPUP MODAL (Direct, Clean, No Inner Search) */}
       {activeModalDomain && (
         <div
+          className="domain-modal-overlay"
           onClick={() => setActiveModalDomain(null)}
           style={{
             position: 'fixed',
@@ -1105,19 +1112,20 @@ export const Members: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            padding: 'clamp(16px, 3vw, 36px)',
+            padding: 'clamp(10px, 2.5vw, 36px)',
             animation: 'fadeIn 0.2s ease-out',
           }}
         >
           <div
+            className="domain-modal-content"
             onClick={(e) => e.stopPropagation()}
             style={{
               backgroundColor: '#09150f',
               border: '1.5px solid var(--accent-border)',
               borderRadius: 'var(--radius-lg)',
-              maxWidth: 'min(94vw, 920px)',
+              maxWidth: 'min(96vw, 920px)',
               width: '100%',
-              maxHeight: 'min(88vh, 800px)',
+              maxHeight: 'min(90vh, 800px)',
               display: 'flex',
               flexDirection: 'column',
               boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
@@ -1127,8 +1135,9 @@ export const Members: React.FC = () => {
           >
             {/* Modal Header */}
             <div
+              className="domain-modal-header"
               style={{
-                padding: 'clamp(20px, 3vw, 28px)',
+                padding: 'clamp(14px, 2.5vw, 24px)',
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
                 display: 'flex',
                 alignItems: 'center',
@@ -1210,12 +1219,13 @@ export const Members: React.FC = () => {
 
             {/* Modal Body: Direct Grid of Domain Members */}
             <div
+              className="domain-modal-body"
               style={{
-                padding: 'clamp(20px, 3vw, 28px)',
+                padding: 'clamp(12px, 2.5vw, 24px)',
                 overflowY: 'auto',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(310px, 45%, 420px), 1fr))',
-                gap: '20px',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
+                gap: '14px',
                 flex: 1,
               }}
             >
@@ -1237,7 +1247,7 @@ export const Members: React.FC = () => {
         </div>
       )}
 
-      {/* Modal Animation Keyframes */}
+      {/* Modal Animation Keyframes & Mobile Responsive Overrides */}
       <style>{`
         @keyframes fadeIn {
           from { opacity: 0; }
@@ -1246,6 +1256,49 @@ export const Members: React.FC = () => {
         @keyframes scaleUp {
           from { transform: scale(0.95); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
+        }
+        @media (max-width: 640px) {
+          .domain-modal-overlay {
+            padding: 8px !important;
+          }
+          .domain-modal-content {
+            max-height: 94vh !important;
+            border-radius: 12px !important;
+          }
+          .domain-modal-header {
+            padding: 12px 14px !important;
+          }
+          .domain-modal-body {
+            padding: 10px !important;
+            gap: 12px !important;
+            grid-template-columns: 1fr !important;
+          }
+          .member-card-container {
+            min-height: 160px !important;
+          }
+          .member-card-photo-col {
+            min-width: 90px !important;
+            width: 32% !important;
+          }
+          .member-card-details-col {
+            padding: 12px 12px 10px !important;
+          }
+        }
+        @media (max-width: 400px) {
+          .domain-modal-overlay {
+            padding: 4px !important;
+          }
+          .domain-modal-body {
+            padding: 8px !important;
+            gap: 10px !important;
+          }
+          .member-card-photo-col {
+            min-width: 82px !important;
+            width: 30% !important;
+          }
+          .member-card-details-col {
+            padding: 10px 10px 8px !important;
+          }
         }
       `}</style>
     </div>
