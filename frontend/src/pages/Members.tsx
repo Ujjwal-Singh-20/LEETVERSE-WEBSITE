@@ -170,7 +170,7 @@ const MemberCard: React.FC<{
         transition: 'transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast)',
         backgroundColor: 'var(--bg-card)',
         overflow: 'hidden',
-        minHeight: '160px',
+        minHeight: '178px',
         cursor: 'pointer',
       }}
       onMouseEnter={(e) => {
@@ -182,20 +182,18 @@ const MemberCard: React.FC<{
         e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.35)';
       }}
     >
-      {/* Left ~38-40% Photo Column */}
+      {/* Left Photo Column - stretches to match right column height without constraining */}
       <div
         style={{
-          width: '38%',
+          width: '36%',
           minWidth: '115px',
-          maxWidth: isPresident ? '180px' : '150px',
+          maxWidth: isPresident ? '175px' : '145px',
           flexShrink: 0,
           position: 'relative',
           overflow: 'hidden',
           backgroundColor: 'var(--bg-surface)',
           borderRight: '1px solid rgba(255, 255, 255, 0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignSelf: 'stretch',
         }}
       >
         {member.photoUrl ? (
@@ -203,6 +201,8 @@ const MemberCard: React.FC<{
             src={member.photoUrl}
             alt={member.name}
             style={{
+              position: 'absolute',
+              inset: 0,
               width: '100%',
               height: '100%',
               objectFit: 'cover',
@@ -212,6 +212,8 @@ const MemberCard: React.FC<{
         ) : (
           <div
             style={{
+              position: 'absolute',
+              inset: 0,
               width: '100%',
               height: '100%',
               display: 'flex',
@@ -247,7 +249,7 @@ const MemberCard: React.FC<{
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          padding: '16px 18px 14px',
+          padding: '16px 16px 14px',
         }}
       >
         {/* Top Info */}
@@ -332,11 +334,11 @@ const MemberCard: React.FC<{
           {member.bio && (
             <p
               style={{
-                fontSize: '0.84rem',
+                fontSize: '0.82rem',
                 color: 'var(--text-muted)',
-                lineHeight: 1.45,
-                marginTop: '8px',
-                marginBottom: '4px',
+                lineHeight: 1.4,
+                marginTop: '6px',
+                marginBottom: '2px',
                 display: '-webkit-box',
                 WebkitLineClamp: 2,
                 WebkitBoxOrient: 'vertical',
@@ -354,21 +356,25 @@ const MemberCard: React.FC<{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginTop: '12px',
-            paddingTop: '10px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+            marginTop: '10px',
+            paddingTop: '8px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
             gap: '8px',
+            flexShrink: 0,
           }}
         >
           <span
             className="mono-tag"
             style={{
               color: 'var(--text-dim)',
-              fontSize: '11.5px',
+              fontSize: '11px',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
+              flex: 1,
+              minWidth: 0,
             }}
+            title={`@${member.username}`}
           >
             @{member.username}
           </span>
@@ -379,7 +385,7 @@ const MemberCard: React.FC<{
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '6px',
                 flexShrink: 0,
                 position: 'relative',
                 zIndex: 2,
@@ -1109,9 +1115,9 @@ export const Members: React.FC = () => {
               backgroundColor: '#09150f',
               border: '1.5px solid var(--accent-border)',
               borderRadius: 'var(--radius-lg)',
-              maxWidth: 'min(92vw, 860px)',
+              maxWidth: 'min(94vw, 920px)',
               width: '100%',
-              maxHeight: 'min(84vh, 760px)',
+              maxHeight: 'min(88vh, 800px)',
               display: 'flex',
               flexDirection: 'column',
               boxShadow: '0 24px 60px rgba(0, 0, 0, 0.75)',
@@ -1208,7 +1214,7 @@ export const Members: React.FC = () => {
                 padding: 'clamp(20px, 3vw, 28px)',
                 overflowY: 'auto',
                 display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(250px, 24vw, 280px), 1fr))',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(310px, 45%, 420px), 1fr))',
                 gap: '20px',
                 flex: 1,
               }}
