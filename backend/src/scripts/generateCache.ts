@@ -47,6 +47,7 @@ export async function generateProjectsListing(): Promise<ProjectsListingBlob> {
       slug: data.slug,
       title: data.title,
       description: data.description,
+      link: data.link || '',
       thumbnail: (data.images && data.images[0]) || '',
       images: data.images || [],
       members: data.members || [],

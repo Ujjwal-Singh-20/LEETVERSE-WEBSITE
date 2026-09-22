@@ -323,6 +323,7 @@ export const Projects: React.FC = () => {
               const cursorTiltX = -cursorPos.y * 6;
 
               const isHovered = hoveredCardIndex === index;
+              const projectLink = project.link;
 
               return (
                 <div
@@ -399,49 +400,51 @@ export const Projects: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Details */}
+                  {/* Body Content */}
                   <div
                     style={{
-                      padding: 'clamp(20px, 2.5vw, 28px)',
+                      padding: '24px',
                       display: 'flex',
                       flexDirection: 'column',
                       flex: 1,
+                      justifyContent: 'space-between',
+                      gap: '16px',
                     }}
                   >
-                    <h3
-                      style={{
-                        fontSize: 'clamp(1.3rem, 1.8vw, 1.55rem)',
-                        fontWeight: 700,
-                        color: isCenterFocus ? '#ffffff' : 'var(--text-primary)',
-                        marginBottom: '10px',
-                      }}
-                    >
-                      {project.title}
-                    </h3>
+                    <div>
+                      <h3
+                        style={{
+                          fontSize: '1.45rem',
+                          fontWeight: 700,
+                          color: 'var(--text-primary)',
+                          marginBottom: '10px',
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        {project.title}
+                      </h3>
+                      <p
+                        style={{
+                          fontSize: '0.95rem',
+                          color: 'var(--text-muted)',
+                          lineHeight: 1.65,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          margin: 0,
+                        }}
+                      >
+                        {project.description}
+                      </p>
+                    </div>
 
-                    <p
-                      style={{
-                        fontSize: '1rem',
-                        color: 'var(--text-muted)',
-                        lineHeight: 1.6,
-                        marginBottom: '20px',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden',
-                        flex: 1,
-                      }}
-                    >
-                      {project.description}
-                    </p>
-
-                    {/* Contributor Strip */}
+                    {/* Bottom Metadata & Inspect */}
                     <div
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        marginTop: 'auto',
                         paddingTop: '16px',
                         borderTop: '1px solid rgba(255, 255, 255, 0.08)',
                       }}
@@ -453,6 +456,7 @@ export const Projects: React.FC = () => {
                               key={m.username || i}
                               to={`/u/${m.username}`}
                               title={m.name}
+                              onMouseDown={(e) => e.stopPropagation()}
                               onClick={(e) => e.stopPropagation()}
                               style={{
                                 width: '32px',
@@ -479,11 +483,12 @@ export const Projects: React.FC = () => {
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {project.link ? (
+                        {projectLink ? (
                           <a
-                            href={project.link}
+                            href={projectLink}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onMouseDown={(e) => e.stopPropagation()}
                             onClick={(e) => e.stopPropagation()}
                             title="Inspect project in new tab"
                             style={{
@@ -515,6 +520,7 @@ export const Projects: React.FC = () => {
                               setActiveProject(project);
                               setActiveImageIndex(0);
                             }}
+                            title="View project details"
                             style={{
                               fontSize: '0.9rem',
                               fontWeight: 600,
@@ -526,9 +532,16 @@ export const Projects: React.FC = () => {
                               background: 'none',
                               border: 'none',
                               padding: 0,
+                              transition: 'color var(--transition-fast)',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.color = '#ffffff';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.color = 'var(--accent-primary)';
                             }}
                           >
-                            Inspect <ExternalLink size={14} />
+                            Inspect
                           </button>
                         )}
                       </div>

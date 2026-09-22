@@ -135,6 +135,7 @@ export interface ProjectsListingBlob {
     slug: string;
     title: string;
     description: string;
+    link?: string;
     thumbnail: string;
     images?: string[];
     members: ProjectMemberSnapshot[];
