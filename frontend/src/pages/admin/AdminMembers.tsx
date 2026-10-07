@@ -11,6 +11,7 @@ import {
   Search,
   Crown,
   ShieldCheck,
+  GraduationCap,
   Github,
   Linkedin,
   Instagram,
@@ -27,6 +28,7 @@ import { DomainTreeNode, AdminMember } from '../../types';
 import { STANDARD_POSITIONS, formatDomainName } from '../../utils/memberTiers';
 
 export const PRESET_DOMAINS = [
+  { slug: 'fic', label: 'FACULTY IN CHARGE' },
   { slug: 'graphic-design', label: 'GRAPHIC DESIGN' },
   { slug: 'marketing-pr', label: 'MARKETING AND PR' },
   { slug: 'cloud', label: 'CLOUD' },
@@ -39,6 +41,7 @@ export const PRESET_DOMAINS = [
 ];
 
 export type RoleLevel =
+  | 'FACULTY IN CHARGE'
   | 'PRESIDENT'
   | 'VICE PRESIDENT'
   | 'GENERAL SECRETARY'
@@ -97,10 +100,13 @@ export const AdminMembers: React.FC = () => {
   const handleRoleChange = (role: RoleLevel) => {
     setSelectedRole(role);
     let targetDomains = addFormDomains;
-    if (isExecutiveRole(role)) {
+    if (role === 'FACULTY IN CHARGE') {
+      targetDomains = ['fic'];
+      setAddFormDomains(['fic']);
+    } else if (isExecutiveRole(role)) {
       targetDomains = ['executive'];
       setAddFormDomains(['executive']);
-    } else if (addFormDomains.includes('executive')) {
+    } else if (addFormDomains.includes('executive') || addFormDomains.includes('fic')) {
       targetDomains = ['web-dev'];
       setAddFormDomains(['web-dev']);
     }
@@ -108,7 +114,9 @@ export const AdminMembers: React.FC = () => {
     const firstDomain = targetDomains[0] || 'web-dev';
     const domainLabel = availableDomains.find((d) => d.slug === firstDomain)?.label || 'DOMAIN';
 
-    if (role === 'PRESIDENT') {
+    if (role === 'FACULTY IN CHARGE') {
+      setAddForm((prev) => ({ ...prev, position: 'Faculty-in-Charge' }));
+    } else if (role === 'PRESIDENT') {
       setAddForm((prev) => ({ ...prev, position: 'President' }));
     } else if (role === 'VICE PRESIDENT') {
       setAddForm((prev) => ({ ...prev, position: 'Vice President' }));
@@ -228,8 +236,9 @@ export const AdminMembers: React.FC = () => {
   const handleCreateMemberSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const isFic = selectedRole === 'FACULTY IN CHARGE';
     const isExec = isExecutiveRole(selectedRole);
-    const finalDomains = isExec ? ['executive'] : (addFormDomains.length > 0 ? addFormDomains : ['ai-ml']);
+    const finalDomains = isFic ? ['fic'] : (isExec ? ['executive'] : (addFormDomains.length > 0 ? addFormDomains : ['web-dev']));
     const primaryDomain = finalDomains[0];
 
     if (!primaryDomain) {
@@ -248,6 +257,12 @@ export const AdminMembers: React.FC = () => {
       return;
     }
 
+    const finalRollNo = isFic ? (addForm.rollNo.trim() || 'N/A') : addForm.rollNo.trim();
+    if (!isFic && !finalRollNo) {
+      alert('Please enter a roll number.');
+      return;
+    }
+
     try {
       await createAdminMember({
         domain: primaryDomain,
@@ -257,7 +272,7 @@ export const AdminMembers: React.FC = () => {
         position: finalPosition,
         status: addForm.status,
         bio: addForm.bio || '',
-        rollNo: addForm.rollNo,
+        rollNo: finalRollNo,
         photoUrl: addForm.photoUrl || null,
         instagram: addForm.instagram || null,
         linkedin: addForm.linkedin || null,
@@ -857,27 +872,29 @@ export const AdminMembers: React.FC = () => {
                   </div>
                 )}
 
-                {/* Roll No (Admin only) */}
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>
-                    Roll No (University ID &bull; Admin Only)
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={activeEditingMember.rollNo}
-                    onBlur={(e) => handleFieldBlur('rollNo', e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      backgroundColor: '#07120c',
-                      border: '1px solid #163324',
-                      borderRadius: '6px',
-                      color: '#f0f7f3',
-                      fontSize: '0.9rem',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                </div>
+                {/* Roll No (Admin only - Hidden for Faculty) */}
+                {activeEditingMember.domain !== 'fic' && !activeEditingMember.position.toLowerCase().includes('faculty') && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>
+                      Roll No (University ID &bull; Admin Only)
+                    </label>
+                    <input
+                      type="text"
+                      defaultValue={activeEditingMember.rollNo}
+                      onBlur={(e) => handleFieldBlur('rollNo', e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        backgroundColor: '#07120c',
+                        border: '1px solid #163324',
+                        borderRadius: '6px',
+                        color: '#f0f7f3',
+                        fontSize: '0.9rem',
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                    />
+                  </div>
+                )}
 
                 {/* Bio */}
                 <div>
@@ -1017,6 +1034,7 @@ export const AdminMembers: React.FC = () => {
                     fontWeight: 600,
                   }}
                 >
+                  <option value="FACULTY IN CHARGE">FACULTY IN CHARGE</option>
                   <option value="PRESIDENT">PRESIDENT</option>
                   <option value="VICE PRESIDENT">VICE PRESIDENT</option>
                   <option value="GENERAL SECRETARY">GENERAL SECRETARY</option>
@@ -1026,8 +1044,27 @@ export const AdminMembers: React.FC = () => {
                 </select>
               </div>
 
-              {/* Step 2: Domain Selection (Shown only if not Executive) */}
-              {isExecutiveRole(selectedRole) ? (
+              {/* Step 2: Domain Selection (Shown only if not Executive/FIC) */}
+              {selectedRole === 'FACULTY IN CHARGE' ? (
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                    border: '1px solid rgba(96, 165, 250, 0.3)',
+                    color: '#60a5fa',
+                    fontSize: '0.82rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
+                  <GraduationCap size={16} color="#60a5fa" />
+                  <span>
+                    Faculty role selected: Domain is automatically assigned as <strong>FACULTY IN CHARGE</strong> (`fic`).
+                  </span>
+                </div>
+              ) : isExecutiveRole(selectedRole) ? (
                 <div
                   style={{
                     padding: '10px 14px',
@@ -1204,25 +1241,27 @@ export const AdminMembers: React.FC = () => {
               </div>
 
               {/* Roll No & Status */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>Roll No</label>
-                  <input
-                    type="text"
-                    required
-                    value={addForm.rollNo}
-                    onChange={(e) => setAddForm({ ...addForm, rollNo: e.target.value })}
-                    placeholder="21CS045"
-                    style={{
-                      width: '100%',
-                      padding: '8px 12px',
-                      backgroundColor: '#07120c',
-                      border: '1px solid #163324',
-                      borderRadius: '6px',
-                      color: '#f0f7f3',
-                    }}
-                  />
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: selectedRole === 'FACULTY IN CHARGE' ? '1fr' : '1fr 1fr', gap: '12px' }}>
+                {selectedRole !== 'FACULTY IN CHARGE' && (
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>Roll No *</label>
+                    <input
+                      type="text"
+                      required
+                      value={addForm.rollNo}
+                      onChange={(e) => setAddForm({ ...addForm, rollNo: e.target.value })}
+                      placeholder="21CS045"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        backgroundColor: '#07120c',
+                        border: '1px solid #163324',
+                        borderRadius: '6px',
+                        color: '#f0f7f3',
+                      }}
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label style={{ display: 'block', fontSize: '0.8rem', color: '#7a9e8b', marginBottom: '4px' }}>Status</label>

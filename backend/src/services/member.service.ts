@@ -109,7 +109,7 @@ export class MemberService {
         domain: primaryDomain,
         domains: cleanDomains,
         bio: data.bio || '',
-        rollNo: data.rollNo,
+        rollNo: data.rollNo || 'N/A',
         createdAt: now,
         updatedAt: now,
       };

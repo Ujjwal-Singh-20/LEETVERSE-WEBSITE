@@ -8,6 +8,7 @@ import {
   Share2,
   Check,
   ShieldCheck,
+  GraduationCap,
   UserX,
 } from 'lucide-react';
 import { fetchBusinessCard } from '../services/api';
@@ -174,7 +175,7 @@ export const BusinessCard: React.FC = () => {
           borderRadius: 'var(--radius-lg)',
           position: 'relative',
           border: `1.5px solid ${tier.borderColor}`,
-          boxShadow: '0 16px 45px rgba(0, 0, 0, 0.5)',
+          boxShadow: tier.type === 'fic' ? '0 16px 45px rgba(59, 130, 246, 0.25)' : '0 16px 45px rgba(0, 0, 0, 0.5)',
           overflow: 'hidden',
           transition: 'border-color var(--transition-smooth), box-shadow var(--transition-smooth)',
         }}
@@ -189,7 +190,11 @@ export const BusinessCard: React.FC = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <ShieldCheck size={18} color={tier.accentColor} />
+            {tier.type === 'fic' ? (
+              <GraduationCap size={18} color={tier.accentColor} />
+            ) : (
+              <ShieldCheck size={18} color={tier.accentColor} />
+            )}
             <span
               className="mono-tag"
               style={{
@@ -198,7 +203,7 @@ export const BusinessCard: React.FC = () => {
                 fontWeight: 700,
               }}
             >
-              LeetVerse Member
+              {tier.type === 'fic' ? 'LeetVerse Faculty In Charge' : 'LeetVerse Member'}
             </span>
           </div>
 

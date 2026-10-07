@@ -21,7 +21,7 @@ export const createMemberSchema = z.object({
   instagram: z.string().url('Invalid Instagram URL').optional().nullable(),
   linkedin: z.string().url('Invalid LinkedIn URL').optional().nullable(),
   github: z.string().url('Invalid GitHub URL').optional().nullable(),
-  rollNo: z.string().trim().min(1, 'Roll number is required'),
+  rollNo: z.string().trim().optional().default('N/A'),
 });
 
 export const updateMemberFieldSchema = z.object({
@@ -55,8 +55,11 @@ export const updateMemberFieldSchema = z.object({
         return false;
       }
     }
-    if (['name', 'position', 'rollNo'].includes(data.field)) {
+    if (['name', 'position'].includes(data.field)) {
       return typeof data.value === 'string' && data.value.trim().length > 0;
+    }
+    if (data.field === 'rollNo') {
+      return typeof data.value === 'string' || data.value === null;
     }
     return true;
   },

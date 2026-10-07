@@ -4,6 +4,7 @@ import {
   Crown,
   Award,
   ShieldCheck,
+  GraduationCap,
   Terminal,
   Palette,
   Search,
@@ -750,6 +751,49 @@ export const Members: React.FC = () => {
         {/* Normal Hierarchy & Domain View */}
         {!loading && !error && searchedMembers === null && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '64px' }}>
+            {/* 0. FACULTY IN CHARGE (FIC) TIER */}
+            {hierarchy.fic.length > 0 && (
+              <div>
+                <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                  <span
+                    className="mono-tag"
+                    style={{
+                      padding: '4px 14px',
+                      background: TIER_CONFIGS.fic.bgSubtle,
+                      color: TIER_CONFIGS.fic.accentColor,
+                      border: `1px solid ${TIER_CONFIGS.fic.borderColor}`,
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      letterSpacing: '0.06em',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 0 20px rgba(96, 165, 250, 0.12)',
+                    }}
+                  >
+                    <GraduationCap size={15} /> FACULTY IN CHARGE
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '24px',
+                    maxWidth: hierarchy.fic.length === 1 ? '520px' : '880px',
+                    margin: '0 auto',
+                  }}
+                >
+                  {hierarchy.fic.map((member) => (
+                    <div key={member.username} style={{ width: '100%', maxWidth: '520px' }}>
+                      <MemberCard member={member} isPresident={true} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* 1. PRESIDENT TIER */}
             {hierarchy.presidents.length > 0 && (
               <div>

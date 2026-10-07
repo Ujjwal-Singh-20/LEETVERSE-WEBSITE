@@ -1,6 +1,7 @@
 import { DomainGroup, PublicMember } from '../types';
 
 export type TierType =
+  | 'fic'
   | 'president'
   | 'vice-president'
   | 'general-secretary'
@@ -18,10 +19,21 @@ export interface TierConfig {
   glowColor: string;
   bgSubtle: string;
   ringColor: string;
-  rank: number; // 1 = President, 2 = VP, 3 = Gen Sec, 4 = Joint Gen Sec, 5 = Domain Lead, 6 = Asst Lead, 7 = Member
+  rank: number; // 0 = FIC, 1 = President, 2 = VP, 3 = Gen Sec, 4 = Joint Gen Sec, 5 = Domain Lead, 6 = Asst Lead, 7 = Member
 }
 
 export const TIER_CONFIGS: Record<TierType, TierConfig> = {
+  fic: {
+    type: 'fic',
+    label: 'Faculty In Charge',
+    badge: 'FACULTY IN CHARGE',
+    accentColor: '#60a5fa', // Imperial Sapphire / Royal Cobalt Blue
+    borderColor: 'rgba(96, 165, 250, 0.55)',
+    glowColor: 'rgba(96, 165, 250, 0.15)',
+    bgSubtle: 'rgba(96, 165, 250, 0.08)',
+    ringColor: '#60a5fa',
+    rank: 0,
+  },
   president: {
     type: 'president',
     label: 'President',
@@ -104,6 +116,14 @@ export const TIER_CONFIGS: Record<TierType, TierConfig> = {
 // Standard dropdown position choices categorized for admin
 export const STANDARD_POSITIONS = [
   {
+    category: 'Faculty & Mentors',
+    positions: [
+      'Faculty-in-Charge',
+      'Faculty Coordinator',
+      'Faculty Advisor',
+    ],
+  },
+  {
     category: 'Executive Leadership',
     positions: [
       'President',
@@ -128,6 +148,23 @@ export const STANDARD_POSITIONS = [
  */
 export function getMemberTier(position: string = '', domainSlug?: string): TierConfig {
   const p = position.toLowerCase().trim();
+  const d = (domainSlug || '').toLowerCase().trim();
+
+  // 0. Faculty In Charge (FIC)
+  if (
+    p.includes('faculty') ||
+    p.includes('fic') ||
+    p === 'faculty in charge' ||
+    p === 'faculty-in-charge' ||
+    p.includes('coordinator') ||
+    p.includes('advisor') ||
+    p.includes('mentor') ||
+    d === 'fic' ||
+    d === 'faculty' ||
+    d === 'faculty-in-charge'
+  ) {
+    return TIER_CONFIGS['fic'];
+  }
 
   // 1. President
   if (p.includes('president') && !p.includes('vice') && !p.includes('vp')) {
@@ -197,6 +234,7 @@ export interface HierarchyMember extends PublicMember {
 }
 
 export interface HierarchyGroups {
+  fic: HierarchyMember[];
   presidents: HierarchyMember[];
   vicePresidents: HierarchyMember[];
   generalSecretaries: HierarchyMember[];
@@ -205,6 +243,7 @@ export interface HierarchyGroups {
 
 export function isExecutiveTier(tierType: TierType): boolean {
   return (
+    tierType === 'fic' ||
     tierType === 'president' ||
     tierType === 'vice-president' ||
     tierType === 'general-secretary' ||
@@ -216,6 +255,7 @@ export function isExecutiveTier(tierType: TierType): boolean {
  * Group members into leadership hierarchy tiers and domain groups.
  */
 export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups {
+  const fic: HierarchyMember[] = [];
   const presidents: HierarchyMember[] = [];
   const vicePresidents: HierarchyMember[] = [];
   const generalSecretaries: HierarchyMember[] = [];
@@ -243,7 +283,12 @@ export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups
         tier,
       };
 
-      if (tier.type === 'president') {
+      if (tier.type === 'fic') {
+        if (!seenLeadership.has(m.username)) {
+          seenLeadership.add(m.username);
+          fic.push(hierarchyMember);
+        }
+      } else if (tier.type === 'president') {
         if (!seenLeadership.has(m.username)) {
           seenLeadership.add(m.username);
           presidents.push(hierarchyMember);
@@ -268,10 +313,17 @@ export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups
   // Sort General Secretaries so General Secretary comes before Joint General Secretary
   generalSecretaries.sort((a, b) => a.tier.rank - b.tier.rank);
 
-  // Filter out pure executive/leadership domains from the regular domain cards list if they only hold executive heads
+  // Filter out pure executive/leadership/fic domains from the regular domain cards list if they only hold executive heads
   const filteredDomainGroups = dedupedDomains.filter((d) => {
     const slug = d.slug.toLowerCase();
-    if (slug === 'leadership' || slug === 'executive' || slug === 'presidents') {
+    if (
+      slug === 'leadership' ||
+      slug === 'executive' ||
+      slug === 'presidents' ||
+      slug === 'fic' ||
+      slug === 'faculty' ||
+      slug === 'faculty-in-charge'
+    ) {
       const hasNonExec = d.members.some((m) => {
         const t = getMemberTier(m.position, d.slug);
         return !isExecutiveTier(t.type);
@@ -282,6 +334,7 @@ export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups
   });
 
   return {
+    fic,
     presidents,
     vicePresidents,
     generalSecretaries,
@@ -295,6 +348,9 @@ export function groupMembersByHierarchy(domains: DomainGroup[]): HierarchyGroups
  */
 export function formatDomainName(slug: string = ''): string {
   const s = slug.toLowerCase().trim();
+  if (s === 'fic' || s === 'faculty' || s === 'faculty-in-charge' || s === 'faculty in charge') {
+    return 'FACULTY IN CHARGE';
+  }
   if (s === 'ai-ml' || s === 'aiml' || s === 'ai/ml') return 'AI/ML';
   if (
     s === 'cp-dsa' ||
