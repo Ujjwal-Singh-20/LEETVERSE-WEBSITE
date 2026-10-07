@@ -304,7 +304,10 @@ const MemberCard: React.FC<{
               width: 'fit-content',
             }}
           >
-            {isPresident && <Crown size={11} />}
+            {tier.type === 'fic' && <GraduationCap size={11} />}
+            {tier.type === 'president' && <Crown size={11} />}
+            {tier.type === 'vice-president' && <Award size={11} />}
+            {(tier.type === 'general-secretary' || tier.type === 'joint-general-secretary') && <ShieldCheck size={11} />}
             {tier.badge}
           </span>
 
@@ -777,16 +780,17 @@ export const Members: React.FC = () => {
                 </div>
 
                 <div
+                  className="leadership-grid"
                   style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '24px',
+                    gridTemplateColumns:
+                      hierarchy.fic.length === 1
+                        ? '1fr'
+                        : 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
                     maxWidth: hierarchy.fic.length === 1 ? '520px' : '880px',
-                    margin: '0 auto',
                   }}
                 >
                   {hierarchy.fic.map((member) => (
-                    <div key={member.username} style={{ width: '100%', maxWidth: '520px' }}>
+                    <div key={member.username} style={{ width: '100%', minWidth: 0 }}>
                       <MemberCard member={member} isPresident={true} />
                     </div>
                   ))}
@@ -819,16 +823,17 @@ export const Members: React.FC = () => {
                 </div>
 
                 <div
+                  className="leadership-grid"
                   style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    gap: '24px',
-                    maxWidth: '520px',
-                    margin: '0 auto',
+                    gridTemplateColumns:
+                      hierarchy.presidents.length === 1
+                        ? '1fr'
+                        : 'repeat(auto-fit, minmax(min(100%, 340px), 1fr))',
+                    maxWidth: hierarchy.presidents.length === 1 ? '520px' : '880px',
                   }}
                 >
                   {hierarchy.presidents.map((pres) => (
-                    <div key={pres.username} style={{ width: '100%' }}>
+                    <div key={pres.username} style={{ width: '100%', minWidth: 0 }}>
                       <MemberCard member={pres} isPresident={true} />
                     </div>
                   ))}
@@ -861,17 +866,19 @@ export const Members: React.FC = () => {
                 </div>
 
                 <div
+                  className="leadership-grid"
                   style={{
-                    display: 'grid',
-                    gridTemplateColumns: hierarchy.vicePresidents.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))',
-                    justifyContent: 'center',
-                    gap: '24px',
+                    gridTemplateColumns:
+                      hierarchy.vicePresidents.length === 1
+                        ? '1fr'
+                        : 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
                     maxWidth: hierarchy.vicePresidents.length === 1 ? '460px' : '880px',
-                    margin: '0 auto',
                   }}
                 >
                   {hierarchy.vicePresidents.map((vp) => (
-                    <MemberCard key={vp.username} member={vp} />
+                    <div key={vp.username} style={{ width: '100%', minWidth: 0 }}>
+                      <MemberCard member={vp} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -902,20 +909,19 @@ export const Members: React.FC = () => {
                 </div>
 
                 <div
+                  className="leadership-grid"
                   style={{
-                    display: 'grid',
                     gridTemplateColumns:
                       hierarchy.generalSecretaries.length === 1
                         ? '1fr'
-                        : 'repeat(auto-fit, minmax(300px, 1fr))',
-                    justifyContent: 'center',
-                    gap: '24px',
+                        : 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))',
                     maxWidth: hierarchy.generalSecretaries.length === 1 ? '460px' : '880px',
-                    margin: '0 auto',
                   }}
                 >
                   {hierarchy.generalSecretaries.map((gs) => (
-                    <MemberCard key={gs.username} member={gs} />
+                    <div key={gs.username} style={{ width: '100%', minWidth: 0 }}>
+                      <MemberCard member={gs} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -1301,7 +1307,20 @@ export const Members: React.FC = () => {
           from { transform: scale(0.95); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
         }
+        .leadership-grid {
+          display: grid;
+          justify-content: center;
+          gap: 24px;
+          width: 100%;
+          margin: 0 auto;
+          box-sizing: border-box;
+        }
         @media (max-width: 640px) {
+          .leadership-grid {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+            padding: 0 4px;
+          }
           .domain-modal-overlay {
             padding: 8px !important;
           }
@@ -1329,6 +1348,10 @@ export const Members: React.FC = () => {
           }
         }
         @media (max-width: 400px) {
+          .leadership-grid {
+            gap: 12px !important;
+            padding: 0;
+          }
           .domain-modal-overlay {
             padding: 4px !important;
           }
