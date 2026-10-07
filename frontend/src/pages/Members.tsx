@@ -31,9 +31,12 @@ import { DomainGroup, PublicMember } from '../types';
 import {
   groupMembersByHierarchy,
   getMemberTier,
+  getMemberRoleForDomain,
+  getMemberPrimaryDomain,
   HierarchyMember,
   TIER_CONFIGS,
   formatDomainName,
+  formatDomainShortName,
 } from '../utils/memberTiers';
 
 // Resolve an icon for the domain, while keeping colors 100% unified with LeetVerse design system
@@ -78,7 +81,26 @@ const MemberCard: React.FC<{
   isPresident?: boolean;
 }> = ({ member, domainSlug, isPresident = false }) => {
   const navigate = useNavigate();
-  const tier = (member as HierarchyMember).tier || getMemberTier(member.position, domainSlug);
+
+  const currentRole = getMemberRoleForDomain(member, domainSlug);
+  const primaryDomain = getMemberPrimaryDomain(member);
+  const tier = domainSlug
+    ? getMemberTier(currentRole, domainSlug, member.domainRoles, primaryDomain)
+    : ((member as HierarchyMember).tier || getMemberTier(currentRole, domainSlug, member.domainRoles, primaryDomain));
+
+  // Check if member is a Lead in another domain
+  const memberDomains = member.domains || (member.domain ? [member.domain] : []);
+  const otherLeadDomain = memberDomains.find((d) => {
+    if (domainSlug && d.toLowerCase().trim() === domainSlug.toLowerCase().trim()) return false;
+    const r = member.domainRoles?.[d] || (d.toLowerCase().trim() === primaryDomain ? member.position : 'Member');
+    return r.toLowerCase().includes('lead');
+  });
+  const isLeadInOtherDomain = Boolean(otherLeadDomain && tier.type === 'member');
+
+  // Filter out the active modal domain if viewing inside a domain modal
+  const displayDomains = domainSlug
+    ? memberDomains.filter((d) => d.toLowerCase().trim() !== domainSlug.toLowerCase().trim())
+    : (memberDomains.length > 1 ? memberDomains : []);
 
   const [socials, setSocials] = useState<{
     github?: string | null;
@@ -171,7 +193,8 @@ const MemberCard: React.FC<{
         transition: 'transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast)',
         backgroundColor: 'var(--bg-card)',
         overflow: 'hidden',
-        minHeight: '175px',
+        minHeight: '180px',
+        height: '100%',
         cursor: 'pointer',
       }}
       onMouseEnter={(e) => {
@@ -251,11 +274,12 @@ const MemberCard: React.FC<{
           minWidth: 0,
           display: 'flex',
           flexDirection: 'column',
-          padding: '14px 14px 12px',
+          justifyContent: 'space-between',
+          padding: '14px 14px 14px',
         }}
       >
         {/* Top Info */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ minWidth: 0, display: 'flex', flexDirection: 'column' }}>
           {/* Member Name */}
           <div
             style={{
@@ -265,73 +289,79 @@ const MemberCard: React.FC<{
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              marginBottom: '3px',
+              marginBottom: '4px',
             }}
           >
             {member.name}
           </div>
 
-          {/* Member Position */}
-          {/* <div
-            style={{
-              fontSize: '0.88rem',
-              color: tier.accentColor,
-              fontWeight: 600,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              marginBottom: '6px',
-            }}
-          >
-            {member.position}
-          </div> */}
+          {/* Tier Badge & Domain Role Clarity */}
+          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', marginBottom: '2px' }}>
+            <span
+              className="mono-tag"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                padding: '2px 7px',
+                background: tier.bgSubtle,
+                color: tier.accentColor,
+                border: `1px solid ${tier.borderColor}`,
+                borderRadius: '4px',
+                fontSize: '10.5px',
+                fontWeight: 700,
+                letterSpacing: '0.03em',
+                width: 'fit-content',
+              }}
+            >
+              {tier.type === 'fic' && <GraduationCap size={11} />}
+              {tier.type === 'president' && <Crown size={11} />}
+              {tier.type === 'vice-president' && <Award size={11} />}
+              {(tier.type === 'general-secretary' || tier.type === 'joint-general-secretary') && <ShieldCheck size={11} />}
+              {tier.badge}
+            </span>
 
-          {/* Tier Badge */}
-          <span
-            className="mono-tag"
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '4px',
-              padding: '2px 7px',
-              background: tier.bgSubtle,
-              color: tier.accentColor,
-              border: `1px solid ${tier.borderColor}`,
-              borderRadius: '4px',
-              fontSize: '10.5px',
-              fontWeight: 700,
-              letterSpacing: '0.03em',
-              width: 'fit-content',
-            }}
-          >
-            {tier.type === 'fic' && <GraduationCap size={11} />}
-            {tier.type === 'president' && <Crown size={11} />}
-            {tier.type === 'vice-president' && <Award size={11} />}
-            {(tier.type === 'general-secretary' || tier.type === 'joint-general-secretary') && <ShieldCheck size={11} />}
-            {tier.badge}
-          </span>
+            {/* If viewed inside a domain modal, but member is a Lead in another home domain */}
+            {domainSlug && isLeadInOtherDomain && otherLeadDomain && (
+              <span
+                style={{
+                  fontSize: '9.5px',
+                  color: 'var(--text-muted)',
+                  fontFamily: 'var(--font-mono)',
+                  letterSpacing: '0.02em',
+                }}
+              >
+                Lead @ {formatDomainShortName(otherLeadDomain)}
+              </span>
+            )}
+          </div>
 
           {/* Multi-Domain tags if member belongs to multiple domains */}
-          {member.domains && member.domains.length > 1 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
-              {member.domains.map((d) => (
-                <span
-                  key={d}
-                  style={{
-                    fontSize: '9.5px',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    background: 'rgba(110, 231, 183, 0.08)',
-                    border: '1px solid rgba(110, 231, 183, 0.22)',
-                    color: 'var(--text-accent)',
-                    fontFamily: 'var(--font-mono)',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                  }}
-                >
-                  {formatDomainName(d)}
-                </span>
-              ))}
+          {displayDomains.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '5px' }}>
+              {displayDomains.map((d) => {
+                const roleInD = member.domainRoles?.[d] || (d.toLowerCase().trim() === primaryDomain ? member.position : 'Member');
+                const isLeadInD = roleInD.toLowerCase().includes('lead');
+                return (
+                  <span
+                    key={d}
+                    style={{
+                      fontSize: '9px',
+                      padding: '1.5px 6px',
+                      borderRadius: '4px',
+                      background: isLeadInD ? 'rgba(52, 211, 153, 0.12)' : 'rgba(255, 255, 255, 0.05)',
+                      border: isLeadInD ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid rgba(255, 255, 255, 0.1)',
+                      color: isLeadInD ? 'var(--text-accent)' : 'var(--text-muted)',
+                      fontFamily: 'var(--font-mono)',
+                      fontWeight: 600,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.02em',
+                    }}
+                  >
+                    {domainSlug ? `+ ${formatDomainShortName(d)}` : `${formatDomainShortName(d)}${isLeadInD ? ' (LEAD)' : ''}`}
+                  </span>
+                );
+              })}
             </div>
           )}
 
@@ -586,7 +616,7 @@ export const Members: React.FC = () => {
               ...m,
               domainSlug: d.slug,
               domainName: d.name,
-              tier: getMemberTier(m.position, d.slug),
+              tier: getMemberTier(m.position, d.slug, m.domainRoles, getMemberPrimaryDomain(m)),
             });
           }
         }
@@ -599,10 +629,15 @@ export const Members: React.FC = () => {
   // Members inside active modal (sorted Leads first, then Asst. Leads, then Members)
   const modalMembers = useMemo(() => {
     if (!activeModalDomain) return [];
-    const list = activeModalDomain.members.map((m) => ({
-      ...m,
-      tier: getMemberTier(m.position, activeModalDomain.slug),
-    }));
+    const list = activeModalDomain.members.map((m) => {
+      const roleInDomain = getMemberRoleForDomain(m, activeModalDomain.slug);
+      const primaryDomain = getMemberPrimaryDomain(m);
+      return {
+        ...m,
+        position: roleInDomain,
+        tier: getMemberTier(roleInDomain, activeModalDomain.slug, m.domainRoles, primaryDomain),
+      };
+    });
 
     list.sort((a, b) => a.tier.rank - b.tier.rank);
     return list;

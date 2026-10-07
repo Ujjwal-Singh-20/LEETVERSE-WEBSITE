@@ -108,6 +108,7 @@ export class MemberService {
         position: data.position,
         domain: primaryDomain,
         domains: cleanDomains,
+        domainRoles: data.domainRoles || { [primaryDomain]: data.position },
         bio: data.bio || '',
         rollNo: data.rollNo || 'N/A',
         createdAt: now,
@@ -240,7 +241,40 @@ export class MemberService {
           ? data.domains
           : [dSlug];
 
-        const memberItem = serializePublicMember(data, dSlug);
+        const primaryDomain = data.domain || memberDomains[0] || dSlug;
+        const memberItem = serializePublicMember(data, primaryDomain);
+
+        const posLower = (data.position || '').toLowerCase();
+        const isExecOrFic =
+          posLower.includes('president') ||
+          posLower.includes('secretary') ||
+          posLower.includes('faculty') ||
+          posLower.includes('fic');
+
+        let titleDomain: string | null = null;
+        if (!isExecOrFic) {
+          if (posLower.includes('ai') || posLower.includes('aiml')) titleDomain = 'ai-ml';
+          else if (posLower.includes('cp') || posLower.includes('dsa')) titleDomain = 'cp-dsa';
+          else if (posLower.includes('cloud')) titleDomain = 'cloud';
+          else if (posLower.includes('video')) titleDomain = 'video-editing';
+          else if (posLower.includes('design') || posLower.includes('graphic')) titleDomain = 'graphic-design';
+          else if (posLower.includes('web')) titleDomain = 'web-dev';
+          else if (posLower.includes('app')) titleDomain = 'app-dev';
+          else if (
+            posLower.includes('marketing') ||
+            posLower.includes('public relations') ||
+            posLower === 'pr' ||
+            posLower.startsWith('pr ') ||
+            posLower.endsWith(' pr') ||
+            posLower.includes(' pr ') ||
+            posLower.includes('pr lead') ||
+            posLower.includes('pr &') ||
+            posLower.includes('& pr')
+          ) {
+            titleDomain = 'marketing-pr';
+          }
+          else if (posLower.includes('data science') || posLower.includes('analytics')) titleDomain = 'data-science';
+        }
 
         // Map this member into all their designated domains
         for (const targetSlug of memberDomains) {
@@ -253,7 +287,23 @@ export class MemberService {
           }
           const list = domainMembersMap.get(targetSlug)!;
           if (!list.some((m) => m.username === memberItem.username)) {
-            list.push(memberItem);
+            let domainSpecificRole = data.domainRoles?.[targetSlug];
+            if (!domainSpecificRole) {
+              if (isExecOrFic) {
+                domainSpecificRole = data.position;
+              } else if (titleDomain && titleDomain !== targetSlug) {
+                domainSpecificRole = 'Member';
+              } else if (targetSlug === primaryDomain) {
+                domainSpecificRole = data.position;
+              } else {
+                domainSpecificRole = data.position.toLowerCase().includes('lead') ? 'Member' : data.position;
+              }
+            }
+            list.push({
+              ...memberItem,
+              domain: primaryDomain,
+              position: domainSpecificRole,
+            });
           }
         }
       }

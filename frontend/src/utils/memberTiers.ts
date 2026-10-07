@@ -144,11 +144,130 @@ export const STANDARD_POSITIONS = [
 ];
 
 /**
- * Determine a member's tier configuration based on their position string and optional domain slug.
+ * Infers domain slug from lead position title (e.g., "AI/ML Lead" -> "ai-ml", "Cloud Lead" -> "cloud").
  */
-export function getMemberTier(position: string = '', domainSlug?: string): TierConfig {
+export function getDomainFromPosition(position: string = ''): string | null {
   const p = position.toLowerCase().trim();
+  // Executive and FIC roles are organization-wide and never map to a sub-domain
+  if (
+    p.includes('president') ||
+    p.includes('secretary') ||
+    p.includes('faculty') ||
+    p.includes('fic') ||
+    p.includes('advisor')
+  ) {
+    return null;
+  }
+  if (p.includes('ai') || p.includes('machine learning') || p.includes('aiml')) return 'ai-ml';
+  if (p.includes('cp') || p.includes('dsa') || p.includes('competitive programming') || p.includes('competetive programming')) return 'cp-dsa';
+  if (p.includes('cloud') || p.includes('devops')) return 'cloud';
+  if (p.includes('video')) return 'video-editing';
+  if (p.includes('design') || p.includes('graphic')) return 'graphic-design';
+  if (
+    p.includes('marketing') ||
+    p.includes('public relations') ||
+    p === 'pr' ||
+    p.startsWith('pr ') ||
+    p.endsWith(' pr') ||
+    p.includes(' pr ') ||
+    p.includes('pr lead') ||
+    p.includes('pr &') ||
+    p.includes('& pr')
+  ) {
+    return 'marketing-pr';
+  }
+  if (p.includes('web')) return 'web-dev';
+  if (p.includes('app') || p.includes('mobile')) return 'app-dev';
+  if (p.includes('data science') || p.includes('analytics')) return 'data-science';
+  return null;
+}
+
+/**
+ * Resolves a member's primary home domain safely from explicit domain, position title, or domains array.
+ */
+export function getMemberPrimaryDomain(member: {
+  domain?: string;
+  domains?: string[];
+  position?: string;
+}): string {
+  if (member.domain && member.domain.trim()) {
+    return member.domain.toLowerCase().trim();
+  }
+  const posDomain = getDomainFromPosition(member.position || '');
+  if (posDomain) return posDomain;
+  if (member.domains && member.domains.length > 0) {
+    return member.domains[0].toLowerCase().trim();
+  }
+  return '';
+}
+
+/**
+ * Returns a member's specific role for a specific domain.
+ */
+export function getMemberRoleForDomain(
+  member: PublicMember,
+  domainSlug?: string
+): string {
+  if (!domainSlug) return member.position;
+  const d = domainSlug.toLowerCase().trim();
+
+  // 1. Explicit per-domain role takes precedence
+  if (member.domainRoles && member.domainRoles[d]) {
+    return member.domainRoles[d];
+  }
+
+  // 2. Executive leadership positions stay as-is across domains
+  const p = member.position.toLowerCase().trim();
+  if (
+    p.includes('president') ||
+    p.includes('secretary') ||
+    p.includes('faculty') ||
+    p.includes('fic') ||
+    p.includes('advisor')
+  ) {
+    return member.position;
+  }
+
+  // 3. Check if position title explicitly belongs to a different domain (e.g. "AI/ML Lead" inside "cp-dsa")
+  const posDomain = getDomainFromPosition(member.position);
+  if (posDomain && posDomain !== d) {
+    return 'Member';
+  }
+
+  // 4. If member has another primary domain and holds a Lead role there, they are a Member here
+  const primaryDomain = getMemberPrimaryDomain(member);
+  if (primaryDomain && primaryDomain !== d) {
+    if (
+      p.includes('lead') ||
+      p.includes('head') ||
+      p.includes('chief') ||
+      p.includes('director') ||
+      p.includes('co-lead')
+    ) {
+      return 'Member';
+    }
+  }
+
+  return member.position;
+}
+
+/**
+ * Determine a member's tier configuration based on their position string, optional domain slug, and domainRoles.
+ */
+export function getMemberTier(
+  position: string = '',
+  domainSlug?: string,
+  domainRoles?: Record<string, string>,
+  primaryDomain?: string
+): TierConfig {
+  let resolvedPosition = position;
   const d = (domainSlug || '').toLowerCase().trim();
+
+  if (d && domainRoles && domainRoles[d]) {
+    resolvedPosition = domainRoles[d];
+  }
+
+  const p = resolvedPosition.toLowerCase().trim();
 
   // 0. Faculty In Charge (FIC)
   if (
@@ -201,20 +320,43 @@ export function getMemberTier(position: string = '', domainSlug?: string): TierC
     return TIER_CONFIGS['general-secretary'];
   }
 
+  // For domain-level roles, apply domain-specific resolution
+  if (d && (!domainRoles || !domainRoles[d])) {
+    const posDomain = getDomainFromPosition(resolvedPosition);
+    if (posDomain && posDomain !== d) {
+      resolvedPosition = 'Member';
+    } else {
+      const prim = (primaryDomain || '').toLowerCase().trim();
+      if (prim && prim !== d) {
+        if (
+          resolvedPosition.toLowerCase().includes('lead') ||
+          resolvedPosition.toLowerCase().includes('head') ||
+          resolvedPosition.toLowerCase().includes('chief') ||
+          resolvedPosition.toLowerCase().includes('director') ||
+          resolvedPosition.toLowerCase().includes('co-lead')
+        ) {
+          resolvedPosition = 'Member';
+        }
+      }
+    }
+  }
+
+  const pDomain = resolvedPosition.toLowerCase().trim();
+
   // Assistant check
   const isAssistant =
-    p.includes('asst') ||
-    p.includes('assistant') ||
-    p.includes('co-lead') ||
-    p.includes('deputy') ||
-    p.includes('vice lead');
+    pDomain.includes('asst') ||
+    pDomain.includes('assistant') ||
+    pDomain.includes('co-lead') ||
+    pDomain.includes('deputy') ||
+    pDomain.includes('vice lead');
 
   // 4. Domain-level Leads & Assistant Leads
   const isLead =
-    p.includes('lead') ||
-    p.includes('head') ||
-    p.includes('director') ||
-    p.includes('chief');
+    pDomain.includes('lead') ||
+    pDomain.includes('head') ||
+    pDomain.includes('director') ||
+    pDomain.includes('chief');
 
   if (isLead) {
     if (isAssistant) {
@@ -398,3 +540,23 @@ export function formatDomainName(slug: string = ''): string {
   }
   return slug.replace(/-/g, ' ').toUpperCase();
 }
+
+/**
+ * Format domain slug into ultra-compact, high-legibility short title for pill tags.
+ * e.g. cp-dsa -> CP / DSA, ai-ml -> AI / ML, graphic-design -> DESIGN
+ */
+export function formatDomainShortName(slug: string = ''): string {
+  const s = slug.toLowerCase().trim();
+  if (s === 'fic' || s === 'faculty' || s === 'faculty-in-charge') return 'FIC';
+  if (s === 'ai-ml' || s === 'aiml' || s === 'ai/ml') return 'AI / ML';
+  if (s.includes('cp') || s.includes('dsa') || s.includes('competitive')) return 'CP / DSA';
+  if (s.includes('graphic') || s.includes('design')) return 'DESIGN';
+  if (s.includes('marketing') || s.includes('pr')) return 'MARKETING';
+  if (s.includes('cloud')) return 'CLOUD';
+  if (s.includes('video')) return 'VIDEO';
+  if (s.includes('web')) return 'WEB DEV';
+  if (s.includes('app') || s.includes('mobile')) return 'APP DEV';
+  if (s.includes('data')) return 'DATA';
+  return slug.replace(/-/g, ' ').toUpperCase();
+}
+

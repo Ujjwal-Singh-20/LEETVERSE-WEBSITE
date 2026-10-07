@@ -316,29 +316,36 @@ export const BusinessCard: React.FC = () => {
                 display: 'flex',
                 flexWrap: 'wrap',
                 justifyContent: 'center',
-                gap: '6px',
-                marginBottom: '10px',
+                gap: '8px',
+                marginBottom: '14px',
               }}
             >
-              {member.domains.map((d) => (
-                <span
-                  key={d}
-                  className="mono-tag"
-                  style={{
-                    fontSize: '11px',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    background: 'rgba(0, 255, 157, 0.06)',
-                    border: '1px solid rgba(0, 255, 157, 0.25)',
-                    color: 'var(--text-accent)',
-                    fontWeight: 600,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.04em',
-                  }}
-                >
-                  {formatDomainName(d)}
-                </span>
-              ))}
+              {member.domains.map((d) => {
+                const roleInD = member.domainRoles?.[d] || (d === member.domain ? member.position : 'Member');
+                const isLeadInD = roleInD.toLowerCase().includes('lead');
+                return (
+                  <span
+                    key={d}
+                    className="mono-tag"
+                    style={{
+                      fontSize: '11px',
+                      padding: '3px 10px',
+                      borderRadius: 'var(--radius-full)',
+                      background: isLeadInD ? 'rgba(52, 211, 153, 0.12)' : 'rgba(255, 255, 255, 0.05)',
+                      border: isLeadInD ? '1px solid rgba(52, 211, 153, 0.35)' : '1px solid rgba(255, 255, 255, 0.12)',
+                      color: isLeadInD ? 'var(--text-accent)' : 'var(--text-muted)',
+                      fontWeight: 600,
+                      letterSpacing: '0.03em',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span>{formatDomainName(d)}</span>
+                    <span style={{ opacity: 0.75, fontSize: '10px' }}>({roleInD})</span>
+                  </span>
+                );
+              })}
             </div>
           )}
 

@@ -19,12 +19,15 @@ const formatTimestamp = (timestamp: any): string => {
  * Enforces explicit allowlist per specs
  */
 export const serializePublicMember = (data: MemberDoc, domain?: string): PublicMember => {
+  const primaryDomain = data.domain || domain || (data.domains?.[0] ?? 'general');
   return {
     name: data.name,
     username: data.username,
     status: data.status,
     position: data.position,
+    domain: primaryDomain,
     domains: data.domains || (domain ? [domain] : []),
+    domainRoles: data.domainRoles || (primaryDomain ? { [primaryDomain]: data.position } : {}),
     bio: data.bio || '',
     photoUrl: data.photoUrl || null,
     instagram: data.instagram || null,
@@ -41,10 +44,12 @@ export const serializeAdminMember = (
   domain: string,
   data: MemberDoc
 ): AdminMember => {
+  const primaryDomain = data.domain || domain || (data.domains?.[0] ?? 'general');
   return {
     docId,
-    domain,
+    domain: primaryDomain,
     domains: data.domains || (domain ? [domain] : []),
+    domainRoles: data.domainRoles || (primaryDomain ? { [primaryDomain]: data.position } : {}),
     name: data.name,
     username: data.username,
     status: data.status,

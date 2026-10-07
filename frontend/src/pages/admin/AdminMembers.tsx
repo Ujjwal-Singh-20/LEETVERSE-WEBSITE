@@ -65,6 +65,7 @@ export const AdminMembers: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState<boolean>(false);
   const [selectedRole, setSelectedRole] = useState<RoleLevel>('MEMBER');
   const [addFormDomains, setAddFormDomains] = useState<string[]>(['web-dev']);
+  const [addFormDomainRoles, setAddFormDomainRoles] = useState<Record<string, string>>({});
   const [customDomainList, setCustomDomainList] = useState<string[]>([]);
   const [newDomainInput, setNewDomainInput] = useState<string>('');
   const [addForm, setAddForm] = useState({
@@ -267,6 +268,7 @@ export const AdminMembers: React.FC = () => {
       await createAdminMember({
         domain: primaryDomain,
         domains: finalDomains,
+        domainRoles: isFic || isExec ? undefined : (finalDomains.length > 1 ? addFormDomainRoles : undefined),
         name: addForm.name,
         username: addForm.username,
         position: finalPosition,
@@ -295,6 +297,7 @@ export const AdminMembers: React.FC = () => {
       });
       setSelectedRole('MEMBER');
       setAddFormDomains(['ai-ml']);
+      setAddFormDomainRoles({});
       setNewDomainInput('');
       setUsernameCheck({ checking: false, available: null, message: '' });
       await loadTree();
@@ -822,53 +825,127 @@ export const AdminMembers: React.FC = () => {
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {availableDomains.map((d) => {
-                        const currentDomains =
-                          activeEditingMember.domains && activeEditingMember.domains.length > 0
-                            ? activeEditingMember.domains
-                            : [activeEditingMember.domain];
-                        const isAssigned = currentDomains.includes(d.slug);
+                    {(() => {
+                      const memberAssignedDomains =
+                        activeEditingMember.domains && activeEditingMember.domains.length > 0
+                          ? activeEditingMember.domains
+                          : [activeEditingMember.domain];
 
-                        return (
-                          <button
-                            key={d.slug}
-                            type="button"
-                            onClick={async () => {
-                              let nextDomains: string[];
-                              if (isAssigned) {
-                                if (currentDomains.length <= 1) {
-                                  alert('A member must belong to at least one domain.');
-                                  return;
-                                }
-                                nextDomains = currentDomains.filter((s) => s !== d.slug);
-                              } else {
-                                nextDomains = [...currentDomains, d.slug];
-                              }
-                              setActiveEditingMember((prev) => (prev ? { ...prev, domains: nextDomains } : null));
-                              await handleFieldBlur('domains', nextDomains);
-                            }}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              padding: '5px 10px',
-                              borderRadius: '5px',
-                              fontSize: '0.78rem',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease',
-                              backgroundColor: isAssigned ? 'rgba(0, 255, 157, 0.12)' : 'transparent',
-                              border: isAssigned ? '1px solid #00ff9d' : '1px solid #1c4a31',
-                              color: isAssigned ? '#00ff9d' : '#5f806e',
-                            }}
-                          >
-                            {isAssigned && <Check size={12} />}
-                            {d.label}
-                          </button>
-                        );
-                      })}
-                    </div>
+                      return (
+                        <>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                            {availableDomains.map((d) => {
+                              const isAssigned = memberAssignedDomains.includes(d.slug);
+
+                              return (
+                                <button
+                                  key={d.slug}
+                                  type="button"
+                                  onClick={async () => {
+                                    let nextDomains: string[];
+                                    if (isAssigned) {
+                                      if (memberAssignedDomains.length <= 1) {
+                                        alert('A member must belong to at least one domain.');
+                                        return;
+                                      }
+                                      nextDomains = memberAssignedDomains.filter((s) => s !== d.slug);
+                                    } else {
+                                      nextDomains = [...memberAssignedDomains, d.slug];
+                                    }
+                                    setActiveEditingMember((prev) => (prev ? { ...prev, domains: nextDomains } : null));
+                                    await handleFieldBlur('domains', nextDomains);
+                                  }}
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '5px 10px',
+                                    borderRadius: '5px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s ease',
+                                    backgroundColor: isAssigned ? 'rgba(0, 255, 157, 0.12)' : 'transparent',
+                                    border: isAssigned ? '1px solid #00ff9d' : '1px solid #1c4a31',
+                                    color: isAssigned ? '#00ff9d' : '#5f806e',
+                                  }}
+                                >
+                                  {isAssigned && <Check size={12} />}
+                                  {d.label}
+                                </button>
+                              );
+                            })}
+                          </div>
+
+                          {/* Domain-Specific Roles Config for Multiple Domains */}
+                          {memberAssignedDomains.length > 1 && (
+                            <div
+                              style={{
+                                marginTop: '10px',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                backgroundColor: '#07120c',
+                                border: '1px solid #163324',
+                              }}
+                            >
+                              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#3dffa0', marginBottom: '8px' }}>
+                                Role in Each Domain:
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {memberAssignedDomains.map((domSlug: string) => {
+                                  const domLabel = availableDomains.find((ad) => ad.slug === domSlug)?.label || domSlug.toUpperCase();
+                                  const currentRoleInDom =
+                                    activeEditingMember.domainRoles?.[domSlug] ||
+                                    (domSlug === activeEditingMember.domain ? activeEditingMember.position : 'Member');
+
+                                  return (
+                                    <div
+                                      key={domSlug}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: '10px',
+                                        fontSize: '0.8rem',
+                                      }}
+                                    >
+                                      <span style={{ color: '#c4d7cc', fontWeight: 600 }}>{domLabel}:</span>
+                                      <select
+                                        value={currentRoleInDom}
+                                        onChange={async (e) => {
+                                          const nextRole = e.target.value;
+                                          const nextDomainRoles = {
+                                            ...(activeEditingMember.domainRoles || {}),
+                                            [domSlug]: nextRole,
+                                          };
+                                          setActiveEditingMember((prev) =>
+                                            prev ? { ...prev, domainRoles: nextDomainRoles } : null
+                                          );
+                                          await handleFieldBlur('domainRoles', nextDomainRoles);
+                                        }}
+                                        style={{
+                                          padding: '4px 8px',
+                                          backgroundColor: '#0a1711',
+                                          border: '1px solid #1c4a31',
+                                          borderRadius: '4px',
+                                          color: '#f0f7f3',
+                                          fontSize: '0.78rem',
+                                        }}
+                                      >
+                                        <option value="Lead">Lead</option>
+                                        <option value="Asst. Lead">Asst. Lead</option>
+                                        <option value="Core Member">Core Member</option>
+                                        <option value="Member">Member</option>
+                                      </select>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -1158,6 +1235,67 @@ export const AdminMembers: React.FC = () => {
                       + Add
                     </button>
                   </div>
+
+                  {/* Domain-Specific Roles in Add Modal */}
+                  {addFormDomains.length > 1 && (
+                    <div
+                      style={{
+                        marginTop: '12px',
+                        padding: '10px 12px',
+                        borderRadius: '6px',
+                        backgroundColor: '#07120c',
+                        border: '1px solid #163324',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#3dffa0', marginBottom: '8px' }}>
+                        Specify Role for Each Assigned Domain:
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {addFormDomains.map((domSlug, idx) => {
+                          const domLabel = availableDomains.find((ad) => ad.slug === domSlug)?.label || domSlug.toUpperCase();
+                          const defaultRoleForDom = idx === 0
+                            ? (selectedRole === 'LEAD' ? 'Lead' : selectedRole === 'ASST LEAD' ? 'Asst. Lead' : 'Member')
+                            : 'Member';
+                          const currentRoleVal = addFormDomainRoles[domSlug] || defaultRoleForDom;
+
+                          return (
+                            <div
+                              key={domSlug}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '10px',
+                                fontSize: '0.8rem',
+                              }}
+                            >
+                              <span style={{ color: '#c4d7cc', fontWeight: 600 }}>{domLabel}:</span>
+                              <select
+                                value={currentRoleVal}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  setAddFormDomainRoles((prev) => ({ ...prev, [domSlug]: val }));
+                                }}
+                                style={{
+                                  padding: '4px 8px',
+                                  backgroundColor: '#0a1711',
+                                  border: '1px solid #1c4a31',
+                                  borderRadius: '4px',
+                                  color: '#f0f7f3',
+                                  fontSize: '0.78rem',
+                                }}
+                              >
+                                <option value="Lead">Lead</option>
+                                <option value="Asst. Lead">Asst. Lead</option>
+                                <option value="Core Member">Core Member</option>
+                                <option value="Member">Member</option>
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 

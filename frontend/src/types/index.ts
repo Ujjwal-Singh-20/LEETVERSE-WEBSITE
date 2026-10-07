@@ -5,7 +5,9 @@ export interface PublicMember {
   username: string;
   status: MemberStatus;
   position: string;
+  domain?: string;
   domains?: string[];
+  domainRoles?: Record<string, string>;
   bio?: string;
   photoUrl?: string | null;
   instagram?: string | null;

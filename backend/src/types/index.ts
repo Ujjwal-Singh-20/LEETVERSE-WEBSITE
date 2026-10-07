@@ -10,6 +10,7 @@ export interface MemberDoc {
   position: string;
   domain?: string;
   domains?: string[];
+  domainRoles?: Record<string, string>;
   bio?: string;
   photoUrl?: string | null;
   instagram?: string | null;
@@ -25,7 +26,9 @@ export interface PublicMember {
   username: string;
   status: MemberStatus;
   position: string;
+  domain?: string;
   domains?: string[];
+  domainRoles?: Record<string, string>;
   bio: string;
   photoUrl: string | null;
   instagram: string | null;
@@ -37,6 +40,7 @@ export interface AdminMember extends Omit<MemberDoc, 'createdAt' | 'updatedAt'> 
   docId: string;
   domain: string;
   domains?: string[];
+  domainRoles?: Record<string, string>;
   createdAt: string;
   updatedAt: string;
 }
@@ -125,6 +129,13 @@ export interface MembersListingBlob {
       position: string;
       photoUrl: string | null;
       status: 'active';
+      domain?: string;
+      domains?: string[];
+      domainRoles?: Record<string, string>;
+      bio?: string;
+      instagram?: string | null;
+      linkedin?: string | null;
+      github?: string | null;
     }>;
   }>;
 }
